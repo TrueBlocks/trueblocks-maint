@@ -7,9 +7,10 @@ import { IconPlus } from '@tabler/icons-react';
 
 interface MaintenanceListProps {
   onItemClick: (event: db.MaintenanceEvent) => void;
+  onAddClick?: () => void;
 }
 
-export function MaintenanceList({ onItemClick }: MaintenanceListProps) {
+export function MaintenanceList({ onItemClick, onAddClick }: MaintenanceListProps) {
   const { events, loading } = useMaintenanceEvents() as any;
   const [data, setData] = useState<db.MaintenanceEvent[]>([]);
 
@@ -37,7 +38,7 @@ export function MaintenanceList({ onItemClick }: MaintenanceListProps) {
     <div>
       <Group justify="space-between" mb="lg">
         <h2>Maintenance Events</h2>
-        <Button leftSection={<IconPlus size={16} />}>
+        <Button leftSection={<IconPlus size={16} />} onClick={onAddClick}>
           Add Event
         </Button>
       </Group>

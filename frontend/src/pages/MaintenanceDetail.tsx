@@ -4,25 +4,37 @@ import { Card, Stack, TextInput, Group, Button, Loader, Center, Textarea, Number
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 
 interface MaintenanceDetailProps {
-  id: number;
+  id?: number | null;
 }
 
 export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
   const [event, setEvent] = useState<db.MaintenanceEvent | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    // TODO: Implement GetMaintenanceEvent from backend
-    setLoading(false);
-    setEvent({
-      id: id.toString(),
-      description: '',
-      type: '',
-      firstDue: new Date().toISOString(),
-      nextDue: new Date().toISOString(),
-      estimatedCost: 0,
-    });
+    if (id) {
+      // TODO: Implement GetMaintenanceEvent from backend
+      setLoading(false);
+      setEvent({
+        id: id.toString(),
+        description: '',
+        type: '',
+        firstDue: new Date().toISOString(),
+        nextDue: new Date().toISOString(),
+        estimatedCost: 0,
+      });
+    } else {
+      // New event - start with blank form
+      setEvent({
+        id: undefined,
+        description: '',
+        type: '',
+        firstDue: new Date().toISOString(),
+        nextDue: new Date().toISOString(),
+        estimatedCost: 0,
+      });
+    }
   }, [id]);
 
   const handleSave = async () => {
@@ -43,7 +55,7 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
     }
   };
 
-  if (loading || !event) {
+  if ((id && loading) || !event) {
     return (
       <Center h={400}>
         <Loader />

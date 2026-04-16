@@ -11,7 +11,8 @@ import { db } from '../types/models';
 export function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id ? parseInt(id, 10) : null;
+  const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
+  const isNew = id === 'new';
   const { events } = useMaintenanceEvents() as any;
 
   const handleItemClick = useCallback(
@@ -20,6 +21,10 @@ export function MaintenancePage() {
     },
     [navigate],
   );
+
+  const handleAddClick = useCallback(() => {
+    navigate('/maintenance/new');
+  }, [navigate]);
 
   const handleTabChange = useCallback(
     (tab: string) => {
@@ -33,7 +38,7 @@ export function MaintenancePage() {
     [navigate, events],
   );
 
-  const activeTab = itemId ? 'detail' : 'list';
+  const activeTab = itemId || isNew ? 'detail' : 'list';
 
   useEffect(() => {
     SetTab('maintenance', activeTab);
@@ -52,9 +57,9 @@ export function MaintenancePage() {
         onTabChange={handleTabChange}
       >
         {activeTab === 'list' && (
-          <MaintenanceList onItemClick={handleItemClick} />
+          <MaintenanceList onItemClick={handleItemClick} onAddClick={handleAddClick} />
         )}
-        {activeTab === 'detail' && itemId && (
+        {activeTab === 'detail' && (itemId || isNew) && (
           <MaintenanceDetail id={itemId} />
         )}
       </TabView>

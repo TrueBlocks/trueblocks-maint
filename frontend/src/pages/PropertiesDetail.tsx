@@ -5,19 +5,33 @@ import { Card, Stack, TextInput, Group, Button, Loader, Center } from '@mantine/
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 
 interface PropertiesDetailProps {
-  id: number;
+  id?: number | null;
 }
 
 export function PropertiesDetail({ id }: PropertiesDetailProps) {
-  const { property, loading, save } = useProperty(id.toString()) as any;
+  const { property, loading, save } = id ? (useProperty(id.toString()) as any) : { property: null, loading: false, save: async () => {} };
   const [formData, setFormData] = useState<db.Property | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
+  // Initialize form with blank data for new properties
   useEffect(() => {
-    if (property) {
-      setFormData(property);
+    if (id) {
+      // Existing property - load from hook
+      if (property) {
+        setFormData(property);
+      }
+    } else {
+      // New property - start with blank form
+      setFormData({
+        id: undefined,
+        name: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+      });
     }
-  }, [property]);
+  }, [property, id]);
 
   const handleSave = async () => {
     if (formData) {
@@ -37,7 +51,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
     }
   };
 
-  if (loading || !formData) {
+  if ((id && loading) || !formData) {
     return (
       <Center h={400}>
         <Loader />

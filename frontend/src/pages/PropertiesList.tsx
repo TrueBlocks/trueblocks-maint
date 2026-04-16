@@ -7,9 +7,10 @@ import { IconPlus } from '@tabler/icons-react';
 
 interface PropertiesListProps {
   onItemClick: (property: db.Property) => void;
+  onAddClick?: () => void;
 }
 
-export function PropertiesList({ onItemClick }: PropertiesListProps) {
+export function PropertiesList({ onItemClick, onAddClick }: PropertiesListProps) {
   const { properties, loading } = useProperties() as any;
   const [data, setData] = useState<db.Property[]>([]);
 
@@ -38,7 +39,7 @@ export function PropertiesList({ onItemClick }: PropertiesListProps) {
     <div>
       <Group justify="space-between" mb="lg">
         <h2>Properties</h2>
-        <Button leftSection={<IconPlus size={16} />}>
+        <Button leftSection={<IconPlus size={16} />} onClick={onAddClick}>
           Add Property
         </Button>
       </Group>

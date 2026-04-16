@@ -11,7 +11,8 @@ import { db } from '../types/models';
 export function PropertiesPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id ? parseInt(id, 10) : null;
+  const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
+  const isNew = id === 'new';
   const { properties } = useProperties() as any;
   const hasInitialized = useRef(false);
 
@@ -21,6 +22,11 @@ export function PropertiesPage() {
     },
     [navigate],
   );
+
+  const handleAddClick = useCallback(() => {
+    // Navigate to detail with a special "new" marker
+    navigate('/properties/new');
+  }, [navigate]);
 
   const handleTabChange = useCallback(
     (tab: string) => {
@@ -34,7 +40,7 @@ export function PropertiesPage() {
     [navigate, properties],
   );
 
-  const activeTab = itemId ? 'detail' : 'list';
+  const activeTab = itemId || isNew ? 'detail' : 'list';
 
   useEffect(() => {
     SetTab('properties', activeTab);
@@ -53,9 +59,9 @@ export function PropertiesPage() {
         onTabChange={handleTabChange}
       >
         {activeTab === 'list' && (
-          <PropertiesList onItemClick={handleItemClick} />
+          <PropertiesList onItemClick={handleItemClick} onAddClick={handleAddClick} />
         )}
-        {activeTab === 'detail' && itemId && (
+        {activeTab === 'detail' && (itemId || isNew) && (
           <PropertiesDetail id={itemId} />
         )}
       </TabView>

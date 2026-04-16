@@ -7,9 +7,10 @@ import { IconPlus } from '@tabler/icons-react';
 
 interface ProvidersListProps {
   onItemClick: (provider: db.ServiceProvider) => void;
+  onAddClick?: () => void;
 }
 
-export function ProvidersList({ onItemClick }: ProvidersListProps) {
+export function ProvidersList({ onItemClick, onAddClick }: ProvidersListProps) {
   const { providers, loading } = useServiceProviders() as any;
   const [data, setData] = useState<db.ServiceProvider[]>([]);
 
@@ -38,7 +39,7 @@ export function ProvidersList({ onItemClick }: ProvidersListProps) {
     <div>
       <Group justify="space-between" mb="lg">
         <h2>Service Providers</h2>
-        <Button leftSection={<IconPlus size={16} />}>
+        <Button leftSection={<IconPlus size={16} />} onClick={onAddClick}>
           Add Provider
         </Button>
       </Group>

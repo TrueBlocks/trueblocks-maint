@@ -4,24 +4,35 @@ import { Card, Stack, TextInput, Group, Button, Loader, Center } from '@mantine/
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 
 interface ProvidersDetailProps {
-  id: number;
+  id?: number | null;
 }
 
 export function ProvidersDetail({ id }: ProvidersDetailProps) {
   const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
-    // TODO: Implement GetServiceProvider from backend
-    setLoading(false);
-    setProvider({
-      id: id.toString(),
-      name: '',
-      specialty: '',
-      phone: '',
-      email: '',
-    });
+    if (id) {
+      // TODO: Implement GetServiceProvider from backend
+      setLoading(false);
+      setProvider({
+        id: id.toString(),
+        name: '',
+        specialty: '',
+        phone: '',
+        email: '',
+      });
+    } else {
+      // New provider - start with blank form
+      setProvider({
+        id: undefined,
+        name: '',
+        specialty: '',
+        phone: '',
+        email: '',
+      });
+    }
   }, [id]);
 
   const handleSave = async () => {
@@ -42,7 +53,7 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
     }
   };
 
-  if (loading || !provider) {
+  if ((id && loading) || !provider) {
     return (
       <Center h={400}>
         <Loader />

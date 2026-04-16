@@ -11,7 +11,8 @@ import { db } from '../types/models';
 export function ProvidersPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id ? parseInt(id, 10) : null;
+  const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
+  const isNew = id === 'new';
   const { providers } = useServiceProviders() as any;
 
   const handleItemClick = useCallback(
@@ -20,6 +21,10 @@ export function ProvidersPage() {
     },
     [navigate],
   );
+
+  const handleAddClick = useCallback(() => {
+    navigate('/providers/new');
+  }, [navigate]);
 
   const handleTabChange = useCallback(
     (tab: string) => {
@@ -33,7 +38,7 @@ export function ProvidersPage() {
     [navigate, providers],
   );
 
-  const activeTab = itemId ? 'detail' : 'list';
+  const activeTab = itemId || isNew ? 'detail' : 'list';
 
   useEffect(() => {
     SetTab('providers', activeTab);
@@ -52,9 +57,9 @@ export function ProvidersPage() {
         onTabChange={handleTabChange}
       >
         {activeTab === 'list' && (
-          <ProvidersList onItemClick={handleItemClick} />
+          <ProvidersList onItemClick={handleItemClick} onAddClick={handleAddClick} />
         )}
-        {activeTab === 'detail' && itemId && (
+        {activeTab === 'detail' && (itemId || isNew) && (
           <ProvidersDetail id={itemId} />
         )}
       </TabView>
