@@ -301,6 +301,33 @@ export function useServiceProviders() {
   return { providers, loading, error, save, delete_, refetch: fetch };
 }
 
+export function useServiceProvider(id?: string) {
+  const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await AppAPI.GetServiceProvider(id);
+        setProvider(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, [id]);
+
+  return { provider, loading, error };
+}
+
 // State Management Functions (Wails API exports)
 export const GetTableState = AppAPI.GetTableState || (() => Promise.resolve({}));
 export const SetTableState = AppAPI.SetTableState || (() => Promise.resolve());

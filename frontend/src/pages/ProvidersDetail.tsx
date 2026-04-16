@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useServiceProviders } from '../hooks/useApi';
+import { useServiceProvider, useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -13,8 +13,12 @@ interface ProvidersDetailProps {
 export function ProvidersDetail({ id }: ProvidersDetailProps) {
   const navigate = useNavigate();
   const { save, delete_ } = useServiceProviders();
+  
+  // Load single provider when editing
+  const isEditing = id && id !== 'new';
+  const { provider: loadedProvider, loading: providerLoading } = useServiceProvider(isEditing ? id : undefined);
+  
   const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
-  const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -105,27 +109,25 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
   };
 
   useEffect(() => {
-    if (id) {
-      setLoading(false);
-      setProvider({
-        id: id.toString(),
-        name: '',
-        specialty: '',
-        phone: '',
-        email: '',
-      });
-    } else {
-      setProvider({
+    // Initialize provider from loaded data when editing or create new
+    if (isEditing && loadedProvider) {
+      setProvider(loadedProvider);
+      setIsDirty(false);
+    } else if (!isEditing) {
+      // Creating new provider - initialize with defaults
+      const defaultProvider: db.ServiceProvider = {
         id: undefined,
         name: '',
         specialty: '',
         phone: '',
         email: '',
-      });
+      };
+      setProvider(defaultProvider);
+      setIsDirty(false);
     }
-  }, [id]);
+  }, [isEditing, loadedProvider]);
 
-  if ((id && loading) || !provider) {
+  if ((isEditing && providerLoading) || !provider) {
     return (
       <Center h={400}>
         <Loader />
