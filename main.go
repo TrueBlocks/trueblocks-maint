@@ -2,34 +2,39 @@ package main
 
 import (
 	"embed"
+	"fmt"
 
-	"github.com/wailsapp/wails/v2"
+	appkit "github.com/TrueBlocks/trueblocks-art/packages/appkit/v2"
+	"github.com/TrueBlocks/trueblocks-maint/v2/app"
+	"github.com/TrueBlocks/trueblocks-maint/v2/internal/state"
 	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
-	// Create an instance of the app structure
-	app := NewApp()
+	application := app.NewApp()
+	stateManager := state.NewManager()
 
-	// Create application with options
-	err := wails.Run(&options.App{
-		Title:  "maint",
-		Width:  1024,
-		Height: 768,
-		AssetServer: &assetserver.Options{
-			Assets: assets,
+	err := appkit.Run(appkit.AppConfig{
+		Title:             "Maint - House Maintenance Manager",
+		Assets:            assets,
+		Width:             1200,
+		Height:            800,
+		GetWindowGeometry: stateManager.GetWindowGeometry,
+		OnStartup:         application.Startup,
+		OnShutdown:        application.Shutdown,
+		SingleInstanceLock: &options.SingleInstanceLock{
+			UniqueId: "com.trueblocks.maint.4f2a9e8d-7c3b-11ec-81d5-0242ac130003",
+			OnSecondInstanceLaunch: func(data options.SecondInstanceData) {
+				fmt.Println("Cannot start a second instance")
+			},
 		},
-		BackgroundColour: &options.RGBA{R: 27, G: 38, B: 54, A: 1},
-		OnStartup:        app.startup,
 		Bind: []interface{}{
-			app,
+			application,
 		},
 	})
-
 	if err != nil {
 		println("Error:", err.Error())
 	}

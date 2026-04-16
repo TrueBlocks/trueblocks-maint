@@ -1,0 +1,17 @@
+.navbar {
+  background-color: var(--mantine-color-gray-0);
+  border-right: 1px solid var(--mantine-color-gray-200);
+}
+
+.nav-button {
+  height: 44px;
+  font-weight: 500;
+}
+
+.nav-button:hover {
+  background-color: var(--mantine-color-gray-100);
+}
+
+.main-content {
+  padding: 24px;
+}

@@ -1,28 +1,31 @@
-import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
+import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { Dashboard } from './pages/Dashboard';
+import { Properties } from './pages/Properties';
+import { Maintenance } from './pages/Maintenance';
+import { Providers } from './pages/Providers';
+import { Settings } from './pages/Settings';
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 import './App.css';
-import {Greet} from "../wailsjs/go/main/App";
 
 function App() {
-    const [resultText, setResultText] = useState("Please enter your name below 👇");
-    const [name, setName] = useState('');
-    const updateName = (e: any) => setName(e.target.value);
-    const updateResultText = (result: string) => setResultText(result);
-
-    function greet() {
-        Greet(name).then(updateResultText);
-    }
-
-    return (
-        <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
-            </div>
-        </div>
-    )
+  return (
+    <MantineProvider>
+      <Notifications />
+      <Router>
+        <Routes>
+          <Route element={<Layout><Dashboard /></Layout>} path="/" />
+          <Route element={<Layout><Properties /></Layout>} path="/properties" />
+          <Route element={<Layout><Maintenance /></Layout>} path="/maintenance" />
+          <Route element={<Layout><Providers /></Layout>} path="/providers" />
+          <Route element={<Layout><Settings /></Layout>} path="/settings" />
+        </Routes>
+      </Router>
+    </MantineProvider>
+  );
 }
 
-export default App
+export default App;
