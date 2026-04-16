@@ -1,0 +1,248 @@
+import { useEffect, useState } from 'react';
+import { db } from '../types/models';
+
+// Wails API bindings - imported as any to avoid module resolution issues
+const AppAPI: any = (window as any).go?.app?.App || {};
+
+
+export function useProperties() {
+  const [properties, setProperties] = useState<db.Property[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = async () => {
+    setLoading(true);
+    try {
+      const data = await AppAPI.GetProperties();
+      setProperties(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch();
+  }, []);
+
+  const save = async (property: db.Property) => {
+    try {
+      const updated = await AppAPI.SaveProperty(property);
+      setProperties((prev) => 
+        prev.some((p) => p.id === updated.id) 
+          ? prev.map((p) => (p.id === updated.id ? updated : p))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteProperty(id);
+      setProperties((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { properties, loading, error, save, delete_, refetch: fetch };
+}
+
+export function useProperty(id: string | undefined) {
+  const [property, setProperty] = useState<db.Property | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await AppAPI.GetProperty(id);
+        setProperty(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, [id]);
+
+  const save = async (updated: db.Property) => {
+    try {
+      const result = await AppAPI.SaveProperty(updated);
+      setProperty(result);
+      return result;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { property, loading, error, save };
+}
+
+export function useSystems(propertyId?: string) {
+  const [systems, setSystems] = useState<db.System[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = async (id: string) => {
+    setLoading(true);
+    try {
+      const data = await AppAPI.GetSystems(id);
+      setSystems(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (propertyId) {
+      fetch(propertyId);
+    }
+  }, [propertyId]);
+
+  const save = async (system: db.System) => {
+    try {
+      const updated = await AppAPI.SaveSystem(system);
+      setSystems((prev) =>
+        prev.some((s) => s.id === updated.id)
+          ? prev.map((s) => (s.id === updated.id ? updated : s))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteSystem(id);
+      setSystems((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { systems, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
+}
+
+export function useMaintenanceEvents(propertyId?: string) {
+  const [events, setEvents] = useState<db.MaintenanceEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = async (id: string) => {
+    setLoading(true);
+    try {
+      const data = await AppAPI.GetMaintenanceEvents(id);
+      setEvents(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (propertyId) {
+      fetch(propertyId);
+    }
+  }, [propertyId]);
+
+  const save = async (event: db.MaintenanceEvent) => {
+    try {
+      const updated = await AppAPI.SaveMaintenanceEvent(event);
+      setEvents((prev) =>
+        prev.some((e) => e.id === updated.id)
+          ? prev.map((e) => (e.id === updated.id ? updated : e))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteMaintenanceEvent(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { events, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
+}
+
+export function useServiceProviders() {
+  const [providers, setProviders] = useState<db.ServiceProvider[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = async () => {
+    setLoading(true);
+    try {
+      const data = await AppAPI.GetServiceProviders('');
+      setProviders(data || []);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetch();
+  }, []);
+
+  const save = async (provider: db.ServiceProvider) => {
+    try {
+      const updated = await AppAPI.SaveServiceProvider(provider);
+      setProviders((prev) =>
+        prev.some((p) => p.id === updated.id)
+          ? prev.map((p) => (p.id === updated.id ? updated : p))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteServiceProvider(id);
+      setProviders((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { providers, loading, error, save, delete_, refetch: fetch };
+}

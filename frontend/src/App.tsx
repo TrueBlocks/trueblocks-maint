@@ -17,11 +17,70 @@ function App() {
       <Notifications />
       <Router>
         <Routes>
-          <Route element={<Layout><Dashboard /></Layout>} path="/" />
-          <Route element={<Layout><Properties /></Layout>} path="/properties" />
-          <Route element={<Layout><Maintenance /></Layout>} path="/maintenance" />
-          <Route element={<Layout><Providers /></Layout>} path="/providers" />
-          <Route element={<Layout><Settings /></Layout>} path="/settings" />
+          <Route
+            path="/"
+            element={
+              <Layout>
+                <Dashboard />
+              </Layout>
+            }
+          />
+          <Route
+            path="/properties"
+            element={
+              <Layout>
+                <Properties />
+              </Layout>
+            }
+          />
+          <Route
+            path="/properties/:id"
+            element={
+              <Layout>
+                <Properties />
+              </Layout>
+            }
+          />
+          <Route
+            path="/maintenance"
+            element={
+              <Layout>
+                <Maintenance />
+              </Layout>
+            }
+          />
+          <Route
+            path="/maintenance/:id"
+            element={
+              <Layout>
+                <Maintenance />
+              </Layout>
+            }
+          />
+          <Route
+            path="/providers"
+            element={
+              <Layout>
+                <Providers />
+              </Layout>
+            }
+          />
+          <Route
+            path="/providers/:id"
+            element={
+              <Layout>
+                <Providers />
+              </Layout>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Layout>
+                <Settings />
+              </Layout>
+            }
+          />
         </Routes>
       </Router>
     </MantineProvider>
