@@ -7,7 +7,7 @@ import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 interface ProvidersDetailProps {
-  id?: number | null;
+  id?: string | null;
 }
 
 export function ProvidersDetail({ id }: ProvidersDetailProps) {
@@ -77,7 +77,7 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
     setIsDeleting(true);
 
     try {
-      await delete_(id.toString());
+      await delete_(id);
       notifications.show({
         title: 'Success',
         message: 'Service provider deleted successfully',

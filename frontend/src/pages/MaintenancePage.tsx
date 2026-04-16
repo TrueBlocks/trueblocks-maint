@@ -11,7 +11,7 @@ import { Grid } from '@mantine/core';
 export function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
+  const itemId = id && id !== 'new' ? id : null;
   const isNew = id === 'new';
   const { events } = useMaintenanceEvents() as any;
   const hasInitialized = useRef(false);
@@ -39,7 +39,7 @@ export function MaintenancePage() {
     SetTab('maintenance', 'list');
   }, []);
 
-  const displayId = itemId || isNew ? itemId : (events?.[0]?.id ? parseInt(events[0].id, 10) : null);
+  const displayId = itemId || isNew ? itemId : events?.[0]?.id;
 
   return (
     <NavigationProvider>

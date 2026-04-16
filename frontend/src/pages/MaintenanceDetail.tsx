@@ -7,7 +7,7 @@ import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 interface MaintenanceDetailProps {
-  id?: number | null;
+  id?: string | null;
 }
 
 export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
@@ -76,7 +76,7 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
     setIsDeleting(true);
 
     try {
-      await delete_(id.toString());
+      await delete_(id);
       notifications.show({
         title: 'Success',
         message: 'Maintenance event deleted successfully',

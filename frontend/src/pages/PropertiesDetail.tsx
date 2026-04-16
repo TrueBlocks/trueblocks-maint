@@ -7,12 +7,12 @@ import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 interface PropertiesDetailProps {
-  id?: number | null;
+  id?: string | null;
 }
 
 export function PropertiesDetail({ id }: PropertiesDetailProps) {
   const navigate = useNavigate();
-  const existingHook = useProperty(id?.toString());
+  const existingHook = useProperty(id || undefined);
   const createHook = useProperties();
   const [formData, setFormData] = useState<db.Property | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -82,7 +82,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
     setIsDeleting(true);
 
     try {
-      await createHook.delete_(id.toString());
+      await createHook.delete_(id);
       notifications.show({
         title: 'Success',
         message: 'Property deleted successfully',

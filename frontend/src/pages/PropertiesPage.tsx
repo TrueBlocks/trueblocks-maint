@@ -11,7 +11,7 @@ import { Grid } from '@mantine/core';
 export function PropertiesPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
+  const itemId = id && id !== 'new' ? id : null;
   const isNew = id === 'new';
   const { properties } = useProperties() as any;
   const hasInitialized = useRef(false);
@@ -39,7 +39,7 @@ export function PropertiesPage() {
     SetTab('properties', 'list');
   }, []);
 
-  const displayId = itemId || isNew ? itemId : (properties?.[0]?.id ? parseInt(properties[0].id, 10) : null);
+  const displayId = itemId || isNew ? itemId : properties?.[0]?.id;
 
   return (
     <NavigationProvider>
