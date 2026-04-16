@@ -149,10 +149,10 @@ export namespace db {
 	    repeat_interval_days: number;
 	    first_due_date: string;
 	    next_due_date: string;
-	    last_completed_date: string;
+	    last_completed_date?: string;
 	    completed_count: number;
 	    notify_days_before: number;
-	    assigned_provider_id: string;
+	    assigned_provider_id?: string;
 	    estimated_cost: number;
 	    notes: string;
 	    created_at: string;

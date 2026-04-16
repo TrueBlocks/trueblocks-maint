@@ -6,23 +6,23 @@ import (
 )
 
 type MaintenanceEvent struct {
-	ID                 string  `json:"id"`
-	PropertyID         string  `json:"property_id"`
-	SystemID           string  `json:"system_id"`
-	Description        string  `json:"description"`
-	Type               string  `json:"type"`
-	RepeatType         string  `json:"repeat_type"`
-	RepeatIntervalDays int     `json:"repeat_interval_days"`
-	FirstDueDate       string  `json:"first_due_date"`
-	NextDueDate        string  `json:"next_due_date"`
-	LastCompletedDate  string  `json:"last_completed_date"`
-	CompletedCount     int     `json:"completed_count"`
-	NotifyDaysBefore   int     `json:"notify_days_before"`
-	AssignedProviderID string  `json:"assigned_provider_id"`
-	EstimatedCost      float64 `json:"estimated_cost"`
-	Notes              string  `json:"notes"`
-	CreatedAt          string  `json:"created_at"`
-	UpdatedAt          string  `json:"updated_at"`
+	ID                 string   `json:"id"`
+	PropertyID         string   `json:"property_id"`
+	SystemID           string   `json:"system_id"`
+	Description        string   `json:"description"`
+	Type               string   `json:"type"`
+	RepeatType         string   `json:"repeat_type"`
+	RepeatIntervalDays int      `json:"repeat_interval_days"`
+	FirstDueDate       string   `json:"first_due_date"`
+	NextDueDate        string   `json:"next_due_date"`
+	LastCompletedDate  *string  `json:"last_completed_date"`
+	CompletedCount     int      `json:"completed_count"`
+	NotifyDaysBefore   int      `json:"notify_days_before"`
+	AssignedProviderID *string  `json:"assigned_provider_id"`
+	EstimatedCost      float64  `json:"estimated_cost"`
+	Notes              string   `json:"notes"`
+	CreatedAt          string   `json:"created_at"`
+	UpdatedAt          string   `json:"updated_at"`
 }
 
 func (db *DB) GetMaintenanceEvents(propertyID string) ([]MaintenanceEvent, error) {
@@ -55,29 +55,31 @@ func (db *DB) SaveMaintenanceEvent(item MaintenanceEvent) (MaintenanceEvent, err
 	if item.ID == "" {
 		return item, fmt.Errorf("event id cannot be empty")
 	}
-	
+
 	// Validate foreign keys before attempting save
 	// Check property exists
 	var propCount int
 	if err := db.conn.QueryRow("SELECT COUNT(*) FROM Properties WHERE id = ?", item.PropertyID).Scan(&propCount); err != nil || propCount == 0 {
 		return item, fmt.Errorf("property %q does not exist", item.PropertyID)
 	}
-	
+
 	// Check system exists and belongs to this property
 	var sysCount int
 	if err := db.conn.QueryRow("SELECT COUNT(*) FROM Systems WHERE id = ? AND property_id = ?", item.SystemID, item.PropertyID).Scan(&sysCount); err != nil || sysCount == 0 {
 		return item, fmt.Errorf("system %q does not exist or does not belong to property %q", item.SystemID, item.PropertyID)
 	}
-	
+
 	// Check provider exists (if specified)
-	if item.AssignedProviderID != "" {
+	var providerID interface{} = nil
+	if item.AssignedProviderID != nil && *item.AssignedProviderID != "" {
 		var provCount int
-		if err := db.conn.QueryRow("SELECT COUNT(*) FROM ServiceProviders WHERE id = ?", item.AssignedProviderID).Scan(&provCount); err != nil || provCount == 0 {
-			return item, fmt.Errorf("service provider %q does not exist", item.AssignedProviderID)
+		if err := db.conn.QueryRow("SELECT COUNT(*) FROM ServiceProviders WHERE id = ?", *item.AssignedProviderID).Scan(&provCount); err != nil || provCount == 0 {
+			return item, fmt.Errorf("service provider %q does not exist", *item.AssignedProviderID)
 		}
+		providerID = *item.AssignedProviderID
 	}
-	
-	_, err := db.conn.Exec("INSERT OR REPLACE INTO MaintenanceEvents (id, property_id, system_id, description, type, repeat_type, repeat_interval_days, first_due_date, next_due_date, last_completed_date, completed_count, notify_days_before, assigned_provider_id, estimated_cost, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)", item.ID, item.PropertyID, item.SystemID, item.Description, item.Type, item.RepeatType, item.RepeatIntervalDays, item.FirstDueDate, item.NextDueDate, item.LastCompletedDate, item.CompletedCount, item.NotifyDaysBefore, item.AssignedProviderID, item.EstimatedCost, item.Notes)
+
+	_, err := db.conn.Exec("INSERT OR REPLACE INTO MaintenanceEvents (id, property_id, system_id, description, type, repeat_type, repeat_interval_days, first_due_date, next_due_date, last_completed_date, completed_count, notify_days_before, assigned_provider_id, estimated_cost, notes, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)", item.ID, item.PropertyID, item.SystemID, item.Description, item.Type, item.RepeatType, item.RepeatIntervalDays, item.FirstDueDate, item.NextDueDate, item.LastCompletedDate, item.CompletedCount, item.NotifyDaysBefore, providerID, item.EstimatedCost, item.Notes)
 	if err != nil {
 		return item, fmt.Errorf("save event: %w", err)
 	}
@@ -98,7 +100,6 @@ func calcNextDueDate(completedDate string, repeatType string, intervalDays int) 
 	switch repeatType {
 	case "once":
 		return "", nil
-	case "monthly":
 		nextDate = t.AddDate(0, 1, 0)
 	case "quarterly":
 		nextDate = t.AddDate(0, 3, 0)
@@ -129,7 +130,7 @@ func (db *DB) CompleteMaintenanceEvent(propertyID, eventID, completedDate, compl
 	if err != nil {
 		return result, fmt.Errorf("calculate next due date: %w", err)
 	}
-	event.LastCompletedDate = completedDate
+	event.LastCompletedDate = &completedDate
 	event.CompletedCount++
 	event.NextDueDate = nextDueDate
 	_, err = db.conn.Exec("UPDATE MaintenanceEvents SET last_completed_date = ?, completed_count = ?, next_due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", completedDate, event.CompletedCount, nextDueDate, eventID)

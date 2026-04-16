@@ -2,7 +2,7 @@ import { AppShell, Box, Text, Stack, Button, Group, Container, Divider } from '@
 import { IconDashboard, IconBox, IconToolsOff, IconUserCheck, IconCalendar, IconSettings } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
-import { SaveWindowGeometry } from '../hooks/useApi';
+import { SaveWindowGeometry, SaveLastRoute, GetLastRoute } from '../hooks/useApi';
 import './Layout.css';
 
 interface NavItem {
@@ -32,6 +32,39 @@ export function Layout({ children }: LayoutProps) {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastHotkeyRef = useRef<string | null>(null);
   const lastHotkeyTimeRef = useRef<number>(0);
+  const hasInitializedRef = useRef(false);
+
+  // Load last route on app startup
+  useEffect(() => {
+    if (hasInitializedRef.current) return; // Only run once
+    hasInitializedRef.current = true;
+
+    const loadLastRoute = async () => {
+      try {
+        const lastRoute = await GetLastRoute();
+        if (lastRoute && lastRoute !== '/') {
+          navigate(lastRoute);
+        }
+      } catch (err) {
+        console.error('Failed to load last route:', err);
+      }
+    };
+
+    loadLastRoute();
+  }, [navigate]);
+
+  // Save route whenever location changes
+  useEffect(() => {
+    const saveRoute = async () => {
+      try {
+        await SaveLastRoute(location.pathname);
+      } catch (err) {
+        console.error('Failed to save route:', err);
+      }
+    };
+
+    saveRoute();
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
