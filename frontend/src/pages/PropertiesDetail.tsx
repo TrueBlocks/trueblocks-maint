@@ -53,7 +53,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
     setIsSaving(true);
 
     try {
-      if (id) {
+      if (id && id !== 'new') {
         await existingHook.save(formData);
         notifications.show({
           title: 'Success',
