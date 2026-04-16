@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProperty, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay, Divider } from '@mantine/core';
-import { IconCheck, IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconCheck, IconTrash, IconPlus, IconEdit } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { DataTable } from '../components/DataTable';
 
@@ -21,6 +21,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [systemsData, setSystemsData] = useState<db.System[]>([]);
 
@@ -58,6 +59,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
           message: 'Property updated successfully',
           color: 'green',
         });
+        setEditModalOpen(false);
       } else {
         const newProperty = { ...formData, id: `prop_${Date.now()}` };
         await createHook.save(newProperty);
@@ -135,109 +137,66 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
 
   return (
     <>
-      <Stack gap="lg" style={{ position: 'relative' }}>
+      <Stack gap="md" style={{ position: 'relative', height: '100%' }}>
         <LoadingOverlay visible={isSaving} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
 
-        <Group justify="space-between">
-          <h2>{formData.name || 'Property Details'}</h2>
-          <Group gap="xs">
-            <Button
-              leftSection={<IconCheck size={16} />}
-              onClick={handleSave}
-              disabled={!isDirty}
-              loading={isSaving}
-            >
-              Save
-            </Button>
-            {id && (
-              <Button
-                color="red"
-                variant="light"
-                leftSection={<IconTrash size={16} />}
-                onClick={() => setDeleteConfirmOpen(true)}
-                disabled={isSaving}
-              >
-                Delete
-              </Button>
-            )}
-          </Group>
-        </Group>
-
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-          <Stack gap="md">
-            <TextInput
-              label="Name *"
-              value={formData.name || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, name: e.currentTarget.value });
-                setIsDirty(true);
-                if (errors.name) setErrors({ ...errors, name: '' });
-              }}
-              error={errors.name}
-              disabled={isSaving}
-            />
-            <TextInput
-              label="Address *"
-              value={formData.address || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, address: e.currentTarget.value });
-                setIsDirty(true);
-                if (errors.address) setErrors({ ...errors, address: '' });
-              }}
-              error={errors.address}
-              disabled={isSaving}
-            />
-            <TextInput
-              label="City *"
-              value={formData.city || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, city: e.currentTarget.value });
-                setIsDirty(true);
-                if (errors.city) setErrors({ ...errors, city: '' });
-              }}
-              error={errors.city}
-              disabled={isSaving}
-            />
-            <TextInput
-              label="State *"
-              value={formData.state || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, state: e.currentTarget.value });
-                setIsDirty(true);
-                if (errors.state) setErrors({ ...errors, state: '' });
-              }}
-              error={errors.state}
-              disabled={isSaving}
-            />
-            <TextInput
-              label="Zip"
-              value={formData.zip || ''}
-              onChange={(e) => {
-                setFormData({ ...formData, zip: e.currentTarget.value });
-                setIsDirty(true);
-              }}
-              disabled={isSaving}
-            />
-          </Stack>
-        </Card>
-
+        {/* Property Info - Compact Text Display */}
         {id && (
-          <>
-            <Divider my="lg" />
-            <div>
-              <Group justify="space-between" mb="lg">
-                <h3>Systems</h3>
+          <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Group justify="space-between" align="flex-start">
+              <Stack gap="xs" style={{ flex: 1 }}>
+                <Text fw={700} size="lg">
+                  {formData.name}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {formData.address}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {formData.city}, {formData.state} {formData.zip}
+                </Text>
+              </Stack>
+              <Group gap="xs">
                 <Button
-                  leftSection={<IconPlus size={16} />}
-                  onClick={() => navigate(`/properties/${id}/systems/new`)}
+                  leftSection={<IconEdit size={16} />}
+                  onClick={() => setEditModalOpen(true)}
                   size="sm"
+                  variant="light"
                 >
-                  Add System
+                  Edit
                 </Button>
+                {id && (
+                  <Button
+                    color="red"
+                    variant="light"
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    size="sm"
+                  >
+                    Delete
+                  </Button>
+                )}
               </Group>
-              {systemsHook.loading ? (
-                <Loader />
-              ) : (
+            </Group>
+          </Card>
+        )}
+
+        {/* Systems Section */}
+        {id && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Group justify="space-between" mb="lg">
+              <h3 style={{ margin: 0 }}>Systems</h3>
+              <Button
+                leftSection={<IconPlus size={16} />}
+                onClick={() => navigate(`/properties/${id}/systems/new`)}
+                size="sm"
+              >
+                Add System
+              </Button>
+            </Group>
+            {systemsHook.loading ? (
+              <Loader />
+            ) : (
+              <div style={{ flex: 1, overflow: 'auto' }}>
                 <DataTable
                   tableName={`systems-${id}`}
                   columns={[
@@ -249,12 +208,100 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
                   getRowKey={(item) => item.id?.toString() || ''}
                   onRowClick={(system) => navigate(`/properties/${id}/systems/${system.id}`)}
                 />
-              )}
-            </div>
-          </>
+              </div>
+            )}
+          </div>
         )}
       </Stack>
 
+      {/* Edit Modal */}
+      <Modal
+        opened={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setIsDirty(false);
+        }}
+        title="Edit Property"
+        size="lg"
+      >
+        <Stack gap="md">
+          <TextInput
+            label="Name *"
+            value={formData.name || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, name: e.currentTarget.value });
+              setIsDirty(true);
+              if (errors.name) setErrors({ ...errors, name: '' });
+            }}
+            error={errors.name}
+            disabled={isSaving}
+          />
+          <TextInput
+            label="Address *"
+            value={formData.address || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, address: e.currentTarget.value });
+              setIsDirty(true);
+              if (errors.address) setErrors({ ...errors, address: '' });
+            }}
+            error={errors.address}
+            disabled={isSaving}
+          />
+          <TextInput
+            label="City *"
+            value={formData.city || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, city: e.currentTarget.value });
+              setIsDirty(true);
+              if (errors.city) setErrors({ ...errors, city: '' });
+            }}
+            error={errors.city}
+            disabled={isSaving}
+          />
+          <TextInput
+            label="State *"
+            value={formData.state || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, state: e.currentTarget.value });
+              setIsDirty(true);
+              if (errors.state) setErrors({ ...errors, state: '' });
+            }}
+            error={errors.state}
+            disabled={isSaving}
+          />
+          <TextInput
+            label="Zip"
+            value={formData.zip || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, zip: e.currentTarget.value });
+              setIsDirty(true);
+            }}
+            disabled={isSaving}
+          />
+          <Group justify="flex-end" mt="lg">
+            <Button
+              variant="subtle"
+              onClick={() => {
+                setEditModalOpen(false);
+                setIsDirty(false);
+              }}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              leftSection={<IconCheck size={16} />}
+              onClick={handleSave}
+              disabled={!isDirty}
+              loading={isSaving}
+            >
+              Save
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
       <Modal
         opened={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}

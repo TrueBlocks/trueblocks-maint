@@ -30,17 +30,14 @@ export function PropertiesList({ onItemClick, onAddClick }: PropertiesListProps)
 
   const columns = [
     { key: 'name', label: 'Name' },
-    { key: 'address', label: 'Address' },
-    { key: 'city', label: 'City' },
-    { key: 'state', label: 'State' },
   ];
 
   return (
     <div>
       <Group justify="space-between" mb="lg">
-        <h2>Properties</h2>
-        <Button leftSection={<IconPlus size={16} />} onClick={onAddClick}>
-          Add Property
+        <h3 style={{ margin: 0 }}>Properties</h3>
+        <Button leftSection={<IconPlus size={16} />} onClick={onAddClick} size="sm">
+          Add
         </Button>
       </Group>
       <DataTable
