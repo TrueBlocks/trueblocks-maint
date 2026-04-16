@@ -42,6 +42,14 @@ function App() {
             }
           />
           <Route
+            path="/properties/:propertyId/systems/:systemId"
+            element={
+              <Layout>
+                <PropertiesPage />
+              </Layout>
+            }
+          />
+          <Route
             path="/maintenance"
             element={
               <Layout>

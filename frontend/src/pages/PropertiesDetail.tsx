@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useProperty, useProperties } from '../hooks/useApi';
+import { useProperty, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
-import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
-import { IconCheck, IconTrash } from '@tabler/icons-react';
+import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay, Divider } from '@mantine/core';
+import { IconCheck, IconTrash, IconPlus } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { DataTable } from '../components/DataTable';
 
 interface PropertiesDetailProps {
   id?: string | null;
@@ -14,12 +15,14 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
   const navigate = useNavigate();
   const existingHook = useProperty(id || undefined);
   const createHook = useProperties();
+  const systemsHook = useSystems(id || undefined);
   const [formData, setFormData] = useState<db.Property | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [systemsData, setSystemsData] = useState<db.System[]>([]);
 
   const property = id ? existingHook.property : null;
   const loading = id ? existingHook.loading : false;
@@ -116,6 +119,12 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
     }
   }, [property, id]);
 
+  useEffect(() => {
+    if (systemsHook.systems) {
+      setSystemsData(systemsHook.systems);
+    }
+  }, [systemsHook.systems]);
+
   if ((id && loading) || !formData) {
     return (
       <Center h={400}>
@@ -211,6 +220,39 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
             />
           </Stack>
         </Card>
+
+        {id && (
+          <>
+            <Divider my="lg" />
+            <div>
+              <Group justify="space-between" mb="lg">
+                <h3>Systems</h3>
+                <Button
+                  leftSection={<IconPlus size={16} />}
+                  onClick={() => navigate(`/properties/${id}/systems/new`)}
+                  size="sm"
+                >
+                  Add System
+                </Button>
+              </Group>
+              {systemsHook.loading ? (
+                <Loader />
+              ) : (
+                <DataTable
+                  tableName={`systems-${id}`}
+                  columns={[
+                    { key: 'name', label: 'System' },
+                    { key: 'type', label: 'Type' },
+                    { key: 'model', label: 'Model' },
+                  ]}
+                  data={systemsData}
+                  getRowKey={(item) => item.id?.toString() || ''}
+                  onRowClick={(system) => navigate(`/properties/${id}/systems/${system.id}`)}
+                />
+              )}
+            </div>
+          </>
+        )}
       </Stack>
 
       <Modal

@@ -4,25 +4,31 @@ import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
 import { PropertiesList } from './PropertiesList';
 import { PropertiesDetail } from './PropertiesDetail';
+import { SystemsDetail } from './SystemsDetail';
 import { useProperties } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Grid } from '@mantine/core';
 
 export function PropertiesPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id, propertyId, systemId } = useParams<{ id: string; propertyId: string; systemId: string }>();
   const navigate = useNavigate();
-  const itemId = id && id !== 'new' ? id : null;
-  const isNew = id === 'new';
+  
+  // Handle both direct /properties/:id and nested /properties/:propertyId/systems/:systemId routes
+  const currentPropertyId = propertyId || id;
+  const isSystemView = !!systemId;
+  
+  const itemId = currentPropertyId && currentPropertyId !== 'new' ? currentPropertyId : null;
+  const isNew = currentPropertyId === 'new';
   const { properties } = useProperties() as any;
   const hasInitialized = useRef(false);
 
   // Auto-select first property when properties load
   useEffect(() => {
-    if (properties && properties.length > 0 && !id && !hasInitialized.current) {
+    if (properties && properties.length > 0 && !currentPropertyId && !hasInitialized.current) {
       hasInitialized.current = true;
       navigate(`/properties/${properties[0].id}`);
     }
-  }, [properties, id, navigate]);
+  }, [properties, currentPropertyId, navigate]);
 
   const handleItemClick = useCallback(
     (item: db.Property) => {
@@ -48,7 +54,9 @@ export function PropertiesPage() {
           <PropertiesList onItemClick={handleItemClick} onAddClick={handleAddClick} />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
-          {displayId || isNew ? (
+          {isSystemView && currentPropertyId && systemId ? (
+            <SystemsDetail propertyId={currentPropertyId} id={systemId} />
+          ) : displayId || isNew ? (
             <PropertiesDetail id={displayId} />
           ) : null}
         </Grid.Col>
