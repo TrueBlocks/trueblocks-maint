@@ -73,9 +73,17 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
       }
       setIsDirty(false);
     } catch (err) {
+      let errorMessage = 'Failed to save property';
+      if (err instanceof Error) {
+        if (err.message.includes('UNIQUE')) {
+          errorMessage = 'A property with this name already exists';
+        } else {
+          errorMessage = err.message;
+        }
+      }
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to save property',
+        message: errorMessage,
         color: 'red',
       });
     } finally {

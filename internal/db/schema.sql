@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS Properties (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
     address TEXT NOT NULL,
     city TEXT NOT NULL,
     state TEXT NOT NULL,
