@@ -37,12 +37,20 @@ func (a *App) Startup(ctx context.Context) {
 		return
 	}
 	if !initialized {
+		fmt.Printf("Database not initialized, initializing schema...\n")
 		schemaPath := filepath.Join(dataDir, "schema.sql")
 		if err := database.InitSchemaFromFile(schemaPath); err != nil {
+			fmt.Printf("Failed to init from file, trying embedded schema: %v\n", err)
 			if embErr := database.InitSchemaFromEmbedded(); embErr != nil {
-				fmt.Printf("Failed to init schema: %v\n", embErr)
+				fmt.Printf("Failed to init embedded schema: %v\n", embErr)
+			} else {
+				fmt.Printf("Successfully initialized schema from embedded\n")
 			}
+		} else {
+			fmt.Printf("Successfully initialized schema from file\n")
 		}
+	} else {
+		fmt.Printf("Database already initialized\n")
 	}
 }
 
