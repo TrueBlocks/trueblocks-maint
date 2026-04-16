@@ -45,7 +45,7 @@ export function PropertiesPage() {
     SetTab('properties', 'list');
   }, []);
 
-  const displayId = itemId || isNew ? itemId : properties?.[0]?.id;
+  const displayId = isNew ? 'new' : (itemId || properties?.[0]?.id);
 
   return (
     <NavigationProvider>

@@ -13,9 +13,9 @@ interface PropertiesDetailProps {
 
 export function PropertiesDetail({ id }: PropertiesDetailProps) {
   const navigate = useNavigate();
-  const existingHook = useProperty(id || undefined);
+  const existingHook = useProperty(id && id !== 'new' ? id : undefined);
   const createHook = useProperties();
-  const systemsHook = useSystems(id || undefined);
+  const systemsHook = useSystems(id && id !== 'new' ? id : undefined);
   const [formData, setFormData] = useState<db.Property | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -25,8 +25,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [systemsData, setSystemsData] = useState<db.System[]>([]);
 
-  const property = id ? existingHook.property : null;
-  const loading = id ? existingHook.loading : false;
+  const isCreating = id === 'new';
+  const property = id && id !== 'new' ? existingHook.property : null;
+  const loading = id && id !== 'new' ? existingHook.loading : false;
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -107,9 +108,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
   };
 
   useEffect(() => {
-    if (id) {
-      if (property) setFormData(property);
-    } else {
+    if (isCreating) {
       setFormData({
         id: undefined,
         name: '',
@@ -118,8 +117,10 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
         state: '',
         zip: '',
       });
+    } else if (id && property) {
+      setFormData(property);
     }
-  }, [property, id]);
+  }, [property, id, isCreating]);
 
   useEffect(() => {
     if (systemsHook.systems) {
@@ -127,7 +128,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
     }
   }, [systemsHook.systems]);
 
-  if ((id && loading) || !formData) {
+  if ((id && id !== 'new' && loading) || !formData) {
     return (
       <Center h={400}>
         <Loader />
@@ -140,48 +141,132 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
       <Stack gap="md" style={{ position: 'relative', height: '100%' }}>
         <LoadingOverlay visible={isSaving} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
 
-        {/* Property Info - Compact Text Display */}
-        {id && (
+        {/* Creating New Property - Show form directly */}
+        {isCreating ? (
           <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Group justify="space-between" align="flex-start">
-              <Stack gap="xs" style={{ flex: 1 }}>
-                <Text fw={700} size="lg">
-                  {formData.name}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {formData.address}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {formData.city}, {formData.state} {formData.zip}
-                </Text>
-              </Stack>
-              <Group gap="xs">
+            <Stack gap="md">
+              <h3>New Property</h3>
+              <TextInput
+                label="Name *"
+                placeholder="Property name"
+                value={formData.name || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.currentTarget.value });
+                  setIsDirty(true);
+                  if (errors.name) setErrors({ ...errors, name: '' });
+                }}
+                error={errors.name}
+                disabled={isSaving}
+              />
+              <TextInput
+                label="Address *"
+                placeholder="Street address"
+                value={formData.address || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, address: e.currentTarget.value });
+                  setIsDirty(true);
+                  if (errors.address) setErrors({ ...errors, address: '' });
+                }}
+                error={errors.address}
+                disabled={isSaving}
+              />
+              <TextInput
+                label="City *"
+                placeholder="City"
+                value={formData.city || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, city: e.currentTarget.value });
+                  setIsDirty(true);
+                  if (errors.city) setErrors({ ...errors, city: '' });
+                }}
+                error={errors.city}
+                disabled={isSaving}
+              />
+              <TextInput
+                label="State *"
+                placeholder="State"
+                value={formData.state || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, state: e.currentTarget.value });
+                  setIsDirty(true);
+                  if (errors.state) setErrors({ ...errors, state: '' });
+                }}
+                error={errors.state}
+                disabled={isSaving}
+              />
+              <TextInput
+                label="Zip"
+                placeholder="Zip code"
+                value={formData.zip || ''}
+                onChange={(e) => {
+                  setFormData({ ...formData, zip: e.currentTarget.value });
+                  setIsDirty(true);
+                }}
+                disabled={isSaving}
+              />
+              <Group justify="flex-end" mt="lg">
                 <Button
-                  leftSection={<IconEdit size={16} />}
-                  onClick={() => setEditModalOpen(true)}
-                  size="sm"
-                  variant="light"
+                  variant="subtle"
+                  onClick={() => navigate('/properties')}
+                  disabled={isSaving}
                 >
-                  Edit
+                  Cancel
                 </Button>
-                {id && (
-                  <Button
-                    color="red"
-                    variant="light"
-                    leftSection={<IconTrash size={16} />}
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    size="sm"
-                  >
-                    Delete
-                  </Button>
-                )}
+                <Button
+                  leftSection={<IconCheck size={16} />}
+                  onClick={handleSave}
+                  disabled={!isDirty}
+                  loading={isSaving}
+                >
+                  Create Property
+                </Button>
               </Group>
-            </Group>
+            </Stack>
           </Card>
-        )}
+        ) : (
+          <>
+            {/* Property Info - Compact Text Display */}
+            {id && id !== 'new' && (
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Group justify="space-between" align="flex-start">
+                  <Stack gap="xs" style={{ flex: 1 }}>
+                    <Text fw={700} size="lg">
+                      {formData.name}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {formData.address}
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {formData.city}, {formData.state} {formData.zip}
+                    </Text>
+                  </Stack>
+                  <Group gap="xs">
+                    <Button
+                      leftSection={<IconEdit size={16} />}
+                      onClick={() => setEditModalOpen(true)}
+                      size="sm"
+                      variant="light"
+                    >
+                      Edit
+                    </Button>
+                    {id && (
+                      <Button
+                        color="red"
+                        variant="light"
+                        leftSection={<IconTrash size={16} />}
+                        onClick={() => setDeleteConfirmOpen(true)}
+                        size="sm"
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </Group>
+                </Group>
+              </Card>
+            )}
 
         {/* Systems Section */}
-        {id && (
+        {id && id !== 'new' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <Group justify="space-between" mb="lg">
               <h3 style={{ margin: 0 }}>Systems</h3>
@@ -211,6 +296,8 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
               </div>
             )}
           </div>
+        )}
+          </>
         )}
       </Stack>
 
