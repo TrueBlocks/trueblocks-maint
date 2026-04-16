@@ -35,29 +35,29 @@ export function Dashboard() {
   }, [properties]);
 
   const overdueEvents = allEvents.filter((e) => {
-    if (!e.nextDue) return false;
-    const nextDue = new Date(e.nextDue);
+    if (!e.next_due_date) return false;
+    const next_due_date = new Date(e.next_due_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return nextDue < today;
+    return next_due_date < today;
   });
 
   const dueSoonEvents = allEvents.filter((e) => {
-    if (!e.nextDue) return false;
-    const nextDue = new Date(e.nextDue);
+    if (!e.next_due_date) return false;
+    const next_due_date = new Date(e.next_due_date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const nextMonth = new Date(today);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    return nextDue >= today && nextDue <= nextMonth;
+    return next_due_date >= today && next_due_date <= nextMonth;
   });
 
   const upcomingEvents = allEvents.filter((e) => {
-    if (!e.nextDue) return false;
-    const nextDue = new Date(e.nextDue);
+    if (!e.next_due_date) return false;
+    const next_due_date = new Date(e.next_due_date);
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
-    return nextDue > nextMonth;
+    return next_due_date > nextMonth;
   });
 
   if (propsLoading || eventLoading) {
@@ -111,7 +111,7 @@ export function Dashboard() {
                   Properties Needing Attention
                 </Text>
                 <Text size="xl" fw={700} c="red">
-                  {new Set(overdueEvents.map((e) => e.propertyID)).size}
+                  {new Set(overdueEvents.map((e) => e.property_id)).size}
                 </Text>
               </Stack>
             </Card>
@@ -185,12 +185,12 @@ export function Dashboard() {
                 </Table.Thead>
                 <Table.Tbody>
                   {overdueEvents.map((event) => {
-                    const nextDue = new Date(event.nextDue || '');
+                    const next_due_date = new Date(event.next_due_date || '');
                     const today = new Date();
                     const daysOverdue = Math.floor(
-                      (today.getTime() - nextDue.getTime()) / (1000 * 60 * 60 * 24)
+                      (today.getTime() - next_due_date.getTime()) / (1000 * 60 * 60 * 24)
                     );
-                    const property = properties.find((p) => p.id === event.propertyID);
+                    const property = properties.find((p) => p.id === event.property_id);
 
                     return (
                       <Table.Tr key={event.id}>
@@ -203,7 +203,7 @@ export function Dashboard() {
                           </Group>
                         </Table.Td>
                         <Table.Td>{property?.name || 'Unknown'}</Table.Td>
-                        <Table.Td>{nextDue.toLocaleDateString()}</Table.Td>
+                        <Table.Td>{next_due_date.toLocaleDateString()}</Table.Td>
                         <Table.Td>
                           <Text c="red" fw={500}>
                             {daysOverdue} days

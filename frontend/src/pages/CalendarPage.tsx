@@ -31,13 +31,13 @@ export function CalendarPage() {
     
     const propsToFilter = filterMode === 'all' ? properties?.map((p: db.Property) => p.id!) : selectedProperties;
     
-    return events.filter((event: db.MaintenanceEvent) => propsToFilter.includes(event.propertyID || ''));
+    return events.filter((event: db.MaintenanceEvent) => propsToFilter.includes(event.property_id || ''));
   }, [events, selectedProperties, filterMode, properties]);
 
   // Get events for a specific date
   const getEventsForDate = (date: Date) => {
     return filteredEvents.filter((event: db.MaintenanceEvent) => {
-      const eventDate = event.nextDue ? new Date(event.nextDue) : null;
+      const eventDate = event.next_due_date ? new Date(event.next_due_date) : null;
       if (!eventDate) return false;
       return (
         eventDate.getDate() === date.getDate() &&
@@ -272,11 +272,11 @@ export function CalendarPage() {
                         <Badge>{event.type}</Badge>
                       </Group>
                       <Text size="sm" c="dimmed">
-                        Property: {properties?.find((p: db.Property) => p.id === event.propertyID)?.name}
+                        Property: {properties?.find((p: db.Property) => p.id === event.property_id)?.name}
                       </Text>
-                      {event.estimatedCost && (
+                      {event.estimated_cost && (
                         <Text size="sm">
-                          Estimated Cost: ${event.estimatedCost.toFixed(2)}
+                          Estimated Cost: ${event.estimated_cost.toFixed(2)}
                         </Text>
                       )}
                     </Stack>
@@ -297,8 +297,8 @@ export function CalendarPage() {
             {filteredEvents.length > 0 ? (
               filteredEvents
                 .sort((a: db.MaintenanceEvent, b: db.MaintenanceEvent) => {
-                  const dateA = a.nextDue ? new Date(a.nextDue).getTime() : Infinity;
-                  const dateB = b.nextDue ? new Date(b.nextDue).getTime() : Infinity;
+                  const dateA = a.next_due_date ? new Date(a.next_due_date).getTime() : Infinity;
+                  const dateB = b.next_due_date ? new Date(b.next_due_date).getTime() : Infinity;
                   return dateA - dateB;
                 })
                 .map((event: db.MaintenanceEvent, idx: number) => (
@@ -311,15 +311,15 @@ export function CalendarPage() {
                         </Group>
                         <Group gap="lg">
                           <Text size="sm" c="dimmed">
-                            Property: {properties?.find((p: db.Property) => p.id === event.propertyID)?.name}
+                            Property: {properties?.find((p: db.Property) => p.id === event.property_id)?.name}
                           </Text>
-                          {event.nextDue && (
+                          {event.next_due_date && (
                             <Text size="sm" c="dimmed">
-                              Due: {dayjs(event.nextDue).format('MMM D, YYYY')}
+                              Due: {dayjs(event.next_due_date).format('MMM D, YYYY')}
                             </Text>
                           )}
-                          {event.estimatedCost && (
-                            <Text size="sm">Cost: ${event.estimatedCost.toFixed(2)}</Text>
+                          {event.estimated_cost && (
+                            <Text size="sm">Cost: ${event.estimated_cost.toFixed(2)}</Text>
                           )}
                         </Group>
                       </Stack>

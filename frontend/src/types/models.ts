@@ -26,19 +26,22 @@ export namespace db {
 
   export interface MaintenanceEvent {
     id?: string;
-    propertyID?: string;
-    systemID?: string;
+    property_id?: string;
+    system_id?: string;
     description?: string;
     type?: string;
-    repeat?: string;
-    firstDue?: string;
-    nextDue?: string;
-    notifyDays?: number;
-    assignedProviderID?: string;
-    estimatedCost?: number;
+    repeat_type?: string;
+    repeat_interval_days?: number;
+    first_due_date?: string;
+    next_due_date?: string;
+    last_completed_date?: string;
+    completed_count?: number;
+    notify_days_before?: number;
+    assigned_provider_id?: string;
+    estimated_cost?: number;
     notes?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    created_at?: string;
+    updated_at?: string;
   }
 
   export interface ServiceProvider {

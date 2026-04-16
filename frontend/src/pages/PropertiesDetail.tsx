@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProperty, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
-import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay, Divider } from '@mantine/core';
+import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash, IconPlus, IconEdit } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { DataTable } from '../components/DataTable';
@@ -92,7 +92,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
   };
 
   const handleDelete = async () => {
-    if (!id) return;
+    if (!id || id === 'new') return;
     setIsDeleting(true);
 
     try {
@@ -273,38 +273,38 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
               </Card>
             )}
 
-        {/* Systems Section */}
-        {id && id !== 'new' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <Group justify="space-between" mb="lg">
-              <h3 style={{ margin: 0 }}>Systems</h3>
-              <Button
-                leftSection={<IconPlus size={16} />}
-                onClick={() => navigate(`/properties/${id}/systems/new`)}
-                size="sm"
-              >
-                Add System
-              </Button>
-            </Group>
-            {systemsHook.loading ? (
-              <Loader />
-            ) : (
-              <div style={{ flex: 1, overflow: 'auto' }}>
-                <DataTable
-                  tableName={`systems-${id}`}
-                  columns={[
-                    { key: 'name', label: 'System' },
-                    { key: 'type', label: 'Type' },
-                    { key: 'model', label: 'Model' },
-                  ]}
-                  data={systemsData}
-                  getRowKey={(item) => item.id?.toString() || ''}
-                  onRowClick={(system) => navigate(`/properties/${id}/systems/${system.id}`)}
-                />
+            {/* Systems Section */}
+            {id && id !== 'new' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Group justify="space-between" mb="lg">
+                  <h3 style={{ margin: 0 }}>Systems</h3>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => navigate(`/properties/${id}/systems/new`)}
+                    size="sm"
+                  >
+                    Add System
+                  </Button>
+                </Group>
+                {systemsHook.loading ? (
+                  <Loader />
+                ) : (
+                  <div style={{ flex: 1, overflow: 'auto' }}>
+                    <DataTable
+                      tableName={`systems-${id}`}
+                      columns={[
+                        { key: 'name', label: 'System' },
+                        { key: 'type', label: 'Type' },
+                        { key: 'model', label: 'Model' },
+                      ]}
+                      data={systemsData}
+                      getRowKey={(item) => item.id?.toString() || ''}
+                      onRowClick={(system) => navigate(`/properties/${id}/systems/${system.id}`)}
+                    />
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
           </>
         )}
       </Stack>
@@ -322,9 +322,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
         <Stack gap="md">
           <TextInput
             label="Name *"
-            value={formData.name || ''}
+            value={formData?.name || ''}
             onChange={(e) => {
-              setFormData({ ...formData, name: e.currentTarget.value });
+              setFormData({ ...formData!, name: e.currentTarget.value });
               setIsDirty(true);
               if (errors.name) setErrors({ ...errors, name: '' });
             }}
@@ -333,9 +333,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
           />
           <TextInput
             label="Address *"
-            value={formData.address || ''}
+            value={formData?.address || ''}
             onChange={(e) => {
-              setFormData({ ...formData, address: e.currentTarget.value });
+              setFormData({ ...formData!, address: e.currentTarget.value });
               setIsDirty(true);
               if (errors.address) setErrors({ ...errors, address: '' });
             }}
@@ -344,9 +344,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
           />
           <TextInput
             label="City *"
-            value={formData.city || ''}
+            value={formData?.city || ''}
             onChange={(e) => {
-              setFormData({ ...formData, city: e.currentTarget.value });
+              setFormData({ ...formData!, city: e.currentTarget.value });
               setIsDirty(true);
               if (errors.city) setErrors({ ...errors, city: '' });
             }}
@@ -355,9 +355,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
           />
           <TextInput
             label="State *"
-            value={formData.state || ''}
+            value={formData?.state || ''}
             onChange={(e) => {
-              setFormData({ ...formData, state: e.currentTarget.value });
+              setFormData({ ...formData!, state: e.currentTarget.value });
               setIsDirty(true);
               if (errors.state) setErrors({ ...errors, state: '' });
             }}
@@ -366,9 +366,9 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
           />
           <TextInput
             label="Zip"
-            value={formData.zip || ''}
+            value={formData?.zip || ''}
             onChange={(e) => {
-              setFormData({ ...formData, zip: e.currentTarget.value });
+              setFormData({ ...formData!, zip: e.currentTarget.value });
               setIsDirty(true);
             }}
             disabled={isSaving}
@@ -405,7 +405,7 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
       >
         <Stack gap="md">
           <Text>
-            Are you sure you want to delete <strong>{formData.name}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{formData?.name}</strong>? This action cannot be undone.
           </Text>
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
