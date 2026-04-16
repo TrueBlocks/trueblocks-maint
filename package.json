@@ -1,0 +1,12 @@
+{
+  "name": "maint",
+  "version": "0.0.0",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "start": "wails dev",
+    "lint": "yarn --cwd frontend lint",
+    "test": "yarn --cwd frontend test",
+    "type-check": "yarn --cwd frontend type-check",
+    "build": "wails build"
+  }
+}
