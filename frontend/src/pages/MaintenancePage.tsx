@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
@@ -6,23 +6,14 @@ import { MaintenanceList } from './MaintenanceList';
 import { MaintenanceDetail } from './MaintenanceDetail';
 import { useMaintenanceEvents } from '../hooks/useApi';
 import { db } from '../types/models';
-import { Grid } from '@mantine/core';
+import { Tabs } from '@mantine/core';
 
 export function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id && id !== 'new' ? id : null;
   const isNew = id === 'new';
+  const hasDetail = !!id;
   const { events } = useMaintenanceEvents() as any;
-  const hasInitialized = useRef(false);
-
-  // Auto-select first event when events load
-  useEffect(() => {
-    if (events && events.length > 0 && !id && !hasInitialized.current) {
-      hasInitialized.current = true;
-      navigate(`/maintenance/${events[0].id}`);
-    }
-  }, [events, id, navigate]);
 
   const handleItemClick = useCallback(
     (item: db.MaintenanceEvent) => {
@@ -35,24 +26,40 @@ export function MaintenancePage() {
     navigate('/maintenance/new');
   }, [navigate]);
 
-  useEffect(() => {
-    SetTab('maintenance', 'list');
-  }, []);
+  // Determine active tab based on URL
+  const activeTab = useMemo(() => {
+    if (hasDetail) return 'detail';
+    return 'list';
+  }, [hasDetail]);
 
-  const displayId = itemId || isNew ? itemId : events?.[0]?.id;
+  const handleTabChange = (tabValue: string | null) => {
+    if (tabValue === 'list') {
+      navigate('/maintenance');
+    }
+  };
+
+  useEffect(() => {
+    SetTab('maintenance', activeTab);
+  }, [activeTab]);
 
   return (
     <NavigationProvider>
-      <Grid gutter="md" style={{ height: '100%' }}>
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
+      <Tabs value={activeTab} onChange={handleTabChange} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Tabs.List>
+          <Tabs.Tab value="list">Events</Tabs.Tab>
+          {hasDetail && <Tabs.Tab value="detail">{id === 'new' ? 'New Event' : events?.find((e: db.MaintenanceEvent) => e.id === id)?.description || 'Event'}</Tabs.Tab>}
+        </Tabs.List>
+
+        <Tabs.Panel value="list" style={{ flex: 1, overflow: 'auto' }}>
           <MaintenanceList onItemClick={handleItemClick} onAddClick={handleAddClick} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
-          {displayId || isNew ? (
-            <MaintenanceDetail id={displayId} />
-          ) : null}
-        </Grid.Col>
-      </Grid>
+        </Tabs.Panel>
+
+        {hasDetail && (
+          <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
+            <MaintenanceDetail id={id} />
+          </Tabs.Panel>
+        )}
+      </Tabs>
     </NavigationProvider>
   );
 }

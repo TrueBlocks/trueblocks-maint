@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
@@ -6,23 +6,14 @@ import { ProvidersList } from './ProvidersList';
 import { ProvidersDetail } from './ProvidersDetail';
 import { useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
-import { Grid } from '@mantine/core';
+import { Tabs } from '@mantine/core';
 
 export function ProvidersPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const itemId = id && id !== 'new' ? id : null;
   const isNew = id === 'new';
+  const hasDetail = !!id;
   const { providers } = useServiceProviders() as any;
-  const hasInitialized = useRef(false);
-
-  // Auto-select first provider when providers load
-  useEffect(() => {
-    if (providers && providers.length > 0 && !id && !hasInitialized.current) {
-      hasInitialized.current = true;
-      navigate(`/providers/${providers[0].id}`);
-    }
-  }, [providers, id, navigate]);
 
   const handleItemClick = useCallback(
     (item: db.ServiceProvider) => {
@@ -35,24 +26,40 @@ export function ProvidersPage() {
     navigate('/providers/new');
   }, [navigate]);
 
-  useEffect(() => {
-    SetTab('providers', 'list');
-  }, []);
+  // Determine active tab based on URL
+  const activeTab = useMemo(() => {
+    if (hasDetail) return 'detail';
+    return 'list';
+  }, [hasDetail]);
 
-  const displayId = itemId || isNew ? itemId : providers?.[0]?.id;
+  const handleTabChange = (tabValue: string | null) => {
+    if (tabValue === 'list') {
+      navigate('/providers');
+    }
+  };
+
+  useEffect(() => {
+    SetTab('providers', activeTab);
+  }, [activeTab]);
 
   return (
     <NavigationProvider>
-      <Grid gutter="md" style={{ height: '100%' }}>
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
+      <Tabs value={activeTab} onChange={handleTabChange} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Tabs.List>
+          <Tabs.Tab value="list">Providers</Tabs.Tab>
+          {hasDetail && <Tabs.Tab value="detail">{id === 'new' ? 'New Provider' : providers?.find((p: db.ServiceProvider) => p.id === id)?.name || 'Provider'}</Tabs.Tab>}
+        </Tabs.List>
+
+        <Tabs.Panel value="list" style={{ flex: 1, overflow: 'auto' }}>
           <ProvidersList onItemClick={handleItemClick} onAddClick={handleAddClick} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
-          {displayId || isNew ? (
-            <ProvidersDetail id={displayId} />
-          ) : null}
-        </Grid.Col>
-      </Grid>
+        </Tabs.Panel>
+
+        {hasDetail && (
+          <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
+            <ProvidersDetail id={id} />
+          </Tabs.Panel>
+        )}
+      </Tabs>
     </NavigationProvider>
   );
 }

@@ -1,5 +1,6 @@
 import { Container, Title, Text, Card, Group, Stack, Grid, Table, Badge, Alert, Loader, Center, Tabs } from '@mantine/core';
 import { IconAlertCircle, IconCheck, IconClock } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { useProperties } from '../hooks/useApi.js';
 import { db } from '../types/models';
 import { useState, useEffect } from 'react';
@@ -8,6 +9,7 @@ import { useState, useEffect } from 'react';
 const AppAPI: any = (window as any).go?.app?.App || {};
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const { properties, loading: propsLoading } = useProperties();
   const [allEvents, setAllEvents] = useState<db.MaintenanceEvent[]>([]);
   const [eventLoading, setEventLoading] = useState(false);
@@ -79,7 +81,14 @@ export function Dashboard() {
         {/* Property Summary Stats */}
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/properties')}
+            >
               <Stack gap="xs">
                 <Text fw={500} c="dimmed" size="sm">
                   Total Properties
@@ -92,7 +101,14 @@ export function Dashboard() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/properties')}
+            >
               <Stack gap="xs">
                 <Text fw={500} c="dimmed" size="sm">
                   Total Systems
@@ -105,7 +121,15 @@ export function Dashboard() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder bg="red.0">
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder 
+              bg="red.0"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/properties')}
+            >
               <Stack gap="xs">
                 <Text fw={500} c="red" size="sm">
                   Properties Needing Attention
@@ -121,7 +145,15 @@ export function Dashboard() {
         {/* Quick Stats - Events by Status */}
         <Grid>
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder bg="red.0">
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder 
+              bg="red.0"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/maintenance')}
+            >
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Text fw={500} c="red" size="sm">
@@ -137,7 +169,15 @@ export function Dashboard() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder bg="orange.0">
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder 
+              bg="orange.0"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/maintenance')}
+            >
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Text fw={500} c="orange" size="sm">
@@ -153,7 +193,15 @@ export function Dashboard() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Card shadow="sm" padding="lg" radius="md" withBorder bg="blue.0">
+            <Card 
+              shadow="sm" 
+              padding="lg" 
+              radius="md" 
+              withBorder 
+              bg="blue.0"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/maintenance')}
+            >
               <Stack gap="xs">
                 <Group justify="space-between">
                   <Text fw={500} c="blue" size="sm">
@@ -193,7 +241,11 @@ export function Dashboard() {
                     const property = properties.find((p) => p.id === event.property_id);
 
                     return (
-                      <Table.Tr key={event.id}>
+                      <Table.Tr 
+                        key={event.id}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/maintenance/${event.id}`)}
+                      >
                         <Table.Td>
                           <Group gap="xs">
                             <Badge color="red" variant="light">
