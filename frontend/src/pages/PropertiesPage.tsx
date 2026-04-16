@@ -1,12 +1,12 @@
-import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SetTab, GetTabRoute, SetTabRoute } from '../hooks/useApi';
-import { TabView } from '@trueblocks/ui';
+import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
 import { PropertiesList } from './PropertiesList';
 import { PropertiesDetail } from './PropertiesDetail';
 import { useProperties } from '../hooks/useApi';
 import { db } from '../types/models';
+import { Grid } from '@mantine/core';
 
 export function PropertiesPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +16,14 @@ export function PropertiesPage() {
   const { properties } = useProperties() as any;
   const hasInitialized = useRef(false);
 
+  // Auto-select first property when properties load
+  useEffect(() => {
+    if (properties && properties.length > 0 && !id && !hasInitialized.current) {
+      hasInitialized.current = true;
+      navigate(`/properties/${properties[0].id}`);
+    }
+  }, [properties, id, navigate]);
+
   const handleItemClick = useCallback(
     (item: db.Property) => {
       navigate(`/properties/${item.id}`);
@@ -24,47 +32,27 @@ export function PropertiesPage() {
   );
 
   const handleAddClick = useCallback(() => {
-    // Navigate to detail with a special "new" marker
     navigate('/properties/new');
   }, [navigate]);
 
-  const handleTabChange = useCallback(
-    (tab: string) => {
-      if (tab === 'list') {
-        navigate('/properties');
-      } else if (tab === 'detail') {
-        const lastId = GetTabRoute('properties-detail') || (properties[0]?.id?.toString() || '1');
-        navigate(`/properties/${lastId}`);
-      }
-    },
-    [navigate, properties],
-  );
-
-  const activeTab = itemId || isNew ? 'detail' : 'list';
-
   useEffect(() => {
-    SetTab('properties', activeTab);
-  }, [activeTab]);
+    SetTab('properties', 'list');
+  }, []);
 
-  const tabs = [
-    { label: 'List', value: 'list' },
-    { label: 'Detail', value: 'detail' },
-  ];
+  const displayId = itemId || isNew ? itemId : (properties?.[0]?.id ? parseInt(properties[0].id, 10) : null);
 
   return (
     <NavigationProvider>
-      <TabView
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      >
-        {activeTab === 'list' && (
+      <Grid gutter="md" style={{ height: '100%' }}>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
           <PropertiesList onItemClick={handleItemClick} onAddClick={handleAddClick} />
-        )}
-        {activeTab === 'detail' && (itemId || isNew) && (
-          <PropertiesDetail id={itemId} />
-        )}
-      </TabView>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
+          {displayId || isNew ? (
+            <PropertiesDetail id={displayId} />
+          ) : null}
+        </Grid.Col>
+      </Grid>
     </NavigationProvider>
   );
 }

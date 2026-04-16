@@ -1,12 +1,12 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SetTab, GetTabRoute, SetTabRoute } from '../hooks/useApi';
-import { TabView } from '@trueblocks/ui';
+import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
 import { MaintenanceList } from './MaintenanceList';
 import { MaintenanceDetail } from './MaintenanceDetail';
 import { useMaintenanceEvents } from '../hooks/useApi';
 import { db } from '../types/models';
+import { Grid } from '@mantine/core';
 
 export function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +14,15 @@ export function MaintenancePage() {
   const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
   const isNew = id === 'new';
   const { events } = useMaintenanceEvents() as any;
+  const hasInitialized = useRef(false);
+
+  // Auto-select first event when events load
+  useEffect(() => {
+    if (events && events.length > 0 && !id && !hasInitialized.current) {
+      hasInitialized.current = true;
+      navigate(`/maintenance/${events[0].id}`);
+    }
+  }, [events, id, navigate]);
 
   const handleItemClick = useCallback(
     (item: db.MaintenanceEvent) => {
@@ -26,43 +35,24 @@ export function MaintenancePage() {
     navigate('/maintenance/new');
   }, [navigate]);
 
-  const handleTabChange = useCallback(
-    (tab: string) => {
-      if (tab === 'list') {
-        navigate('/maintenance');
-      } else if (tab === 'detail') {
-        const lastId = GetTabRoute('maintenance-detail') || (events[0]?.id?.toString() || '1');
-        navigate(`/maintenance/${lastId}`);
-      }
-    },
-    [navigate, events],
-  );
-
-  const activeTab = itemId || isNew ? 'detail' : 'list';
-
   useEffect(() => {
-    SetTab('maintenance', activeTab);
-  }, [activeTab]);
+    SetTab('maintenance', 'list');
+  }, []);
 
-  const tabs = [
-    { label: 'List', value: 'list' },
-    { label: 'Detail', value: 'detail' },
-  ];
+  const displayId = itemId || isNew ? itemId : (events?.[0]?.id ? parseInt(events[0].id, 10) : null);
 
   return (
     <NavigationProvider>
-      <TabView
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      >
-        {activeTab === 'list' && (
+      <Grid gutter="md" style={{ height: '100%' }}>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
           <MaintenanceList onItemClick={handleItemClick} onAddClick={handleAddClick} />
-        )}
-        {activeTab === 'detail' && (itemId || isNew) && (
-          <MaintenanceDetail id={itemId} />
-        )}
-      </TabView>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
+          {displayId || isNew ? (
+            <MaintenanceDetail id={displayId} />
+          ) : null}
+        </Grid.Col>
+      </Grid>
     </NavigationProvider>
   );
 }

@@ -1,12 +1,12 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SetTab, GetTabRoute, SetTabRoute } from '../hooks/useApi';
-import { TabView } from '@trueblocks/ui';
+import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
 import { ProvidersList } from './ProvidersList';
 import { ProvidersDetail } from './ProvidersDetail';
 import { useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
+import { Grid } from '@mantine/core';
 
 export function ProvidersPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +14,15 @@ export function ProvidersPage() {
   const itemId = id && id !== 'new' ? parseInt(id, 10) : null;
   const isNew = id === 'new';
   const { providers } = useServiceProviders() as any;
+  const hasInitialized = useRef(false);
+
+  // Auto-select first provider when providers load
+  useEffect(() => {
+    if (providers && providers.length > 0 && !id && !hasInitialized.current) {
+      hasInitialized.current = true;
+      navigate(`/providers/${providers[0].id}`);
+    }
+  }, [providers, id, navigate]);
 
   const handleItemClick = useCallback(
     (item: db.ServiceProvider) => {
@@ -26,43 +35,24 @@ export function ProvidersPage() {
     navigate('/providers/new');
   }, [navigate]);
 
-  const handleTabChange = useCallback(
-    (tab: string) => {
-      if (tab === 'list') {
-        navigate('/providers');
-      } else if (tab === 'detail') {
-        const lastId = GetTabRoute('providers-detail') || (providers[0]?.id?.toString() || '1');
-        navigate(`/providers/${lastId}`);
-      }
-    },
-    [navigate, providers],
-  );
-
-  const activeTab = itemId || isNew ? 'detail' : 'list';
-
   useEffect(() => {
-    SetTab('providers', activeTab);
-  }, [activeTab]);
+    SetTab('providers', 'list');
+  }, []);
 
-  const tabs = [
-    { label: 'List', value: 'list' },
-    { label: 'Detail', value: 'detail' },
-  ];
+  const displayId = itemId || isNew ? itemId : (providers?.[0]?.id ? parseInt(providers[0].id, 10) : null);
 
   return (
     <NavigationProvider>
-      <TabView
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      >
-        {activeTab === 'list' && (
+      <Grid gutter="md" style={{ height: '100%' }}>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
           <ProvidersList onItemClick={handleItemClick} onAddClick={handleAddClick} />
-        )}
-        {activeTab === 'detail' && (itemId || isNew) && (
-          <ProvidersDetail id={itemId} />
-        )}
-      </TabView>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 6 }} style={{ display: 'flex', flexDirection: 'column' }}>
+          {displayId || isNew ? (
+            <ProvidersDetail id={displayId} />
+          ) : null}
+        </Grid.Col>
+      </Grid>
     </NavigationProvider>
   );
 }
