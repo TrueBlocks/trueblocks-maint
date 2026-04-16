@@ -18,7 +18,17 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@types/*": ["./src/types/*"],
+      "@wailsjs/*": ["./wailsjs/*"],
+      "@trueblocks/ui": ["../../packages/ui/src"],
+      "@trueblocks/scaffold": ["../../packages/scaffold/src"]
+    }
   },
   "include": [
     "src",

@@ -3,7 +3,7 @@ import { Notifications } from '@mantine/notifications';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
-import { Properties } from './pages/Properties';
+import { PropertiesPage } from './pages/PropertiesPage';
 import { Maintenance } from './pages/Maintenance';
 import { Providers } from './pages/Providers';
 import { Settings } from './pages/Settings';
@@ -29,7 +29,7 @@ function App() {
             path="/properties"
             element={
               <Layout>
-                <Properties />
+                <PropertiesPage />
               </Layout>
             }
           />
@@ -37,7 +37,7 @@ function App() {
             path="/properties/:id"
             element={
               <Layout>
-                <Properties />
+                <PropertiesPage />
               </Layout>
             }
           />

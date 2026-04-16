@@ -246,3 +246,17 @@ export function useServiceProviders() {
 
   return { providers, loading, error, save, delete_, refetch: fetch };
 }
+
+// State Management Functions (Wails API exports)
+export const GetTableState = AppAPI.GetTableState || (() => Promise.resolve({}));
+export const SetTableState = AppAPI.SetTableState || (() => Promise.resolve());
+export const GetSidebarWidth = AppAPI.GetSidebarWidth || (() => 260);
+export const SetSidebarWidth = AppAPI.SetSidebarWidth || (() => {});
+export const GetTab = AppAPI.GetTab || (() => '');
+export const SetTab = AppAPI.SetTab || (() => {});
+export const GetTabRoute = AppAPI.GetTabRoute || (() => '');
+export const SetTabRoute = AppAPI.SetTabRoute || (() => {});
+export const GetLastRoute = AppAPI.GetLastRoute || (() => '');
+export const SaveLastRoute = AppAPI.SaveLastRoute || (() => {});
+export const GetWindowGeometry = AppAPI.GetWindowGeometry || (() => Promise.resolve([0, 0, 1100, 750]));
+export const SaveWindowGeometry = AppAPI.SaveWindowGeometry || (() => {});
