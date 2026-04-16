@@ -1,7 +1,8 @@
 import { AppShell, Box, Text, Stack, Button, Group, Container, Divider } from '@mantine/core';
 import { IconDashboard, IconBox, IconToolsOff, IconUserCheck, IconSettings } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { SaveWindowGeometry } from '../hooks/useApi';
 import './Layout.css';
 
 interface NavItem {
@@ -27,6 +28,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,6 +48,38 @@ export function Layout({ children }: LayoutProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
+
+  // Save window geometry when window is resized or moved
+  useEffect(() => {
+    const handleWindowResize = () => {
+      // Debounce the save to avoid excessive calls
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      saveTimeoutRef.current = setTimeout(() => {
+        try {
+          SaveWindowGeometry(
+            window.screenX,
+            window.screenY,
+            window.innerWidth,
+            window.innerHeight
+          );
+        } catch (err) {
+          console.error('Failed to save window geometry:', err);
+        }
+      }, 500);
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener('move', handleWindowResize);
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('move', handleWindowResize);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <AppShell

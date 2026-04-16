@@ -259,4 +259,4 @@ export const SetTabRoute = AppAPI.SetTabRoute || (() => {});
 export const GetLastRoute = AppAPI.GetLastRoute || (() => '');
 export const SaveLastRoute = AppAPI.SaveLastRoute || (() => {});
 export const GetWindowGeometry = AppAPI.GetWindowGeometry || (() => Promise.resolve([0, 0, 1100, 750]));
-export const SaveWindowGeometry = AppAPI.SaveWindowGeometry || (() => {});
+export const SaveWindowGeometry = AppAPI.SaveWindowGeometry || ((x: number, y: number, w: number, h: number) => {});
