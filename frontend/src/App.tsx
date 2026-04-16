@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { PropertiesPage } from './pages/PropertiesPage';
-import { Maintenance } from './pages/Maintenance';
-import { Providers } from './pages/Providers';
+import { MaintenancePage } from './pages/MaintenancePage';
+import { ProvidersPage } from './pages/ProvidersPage';
 import { Settings } from './pages/Settings';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -45,7 +45,7 @@ function App() {
             path="/maintenance"
             element={
               <Layout>
-                <Maintenance />
+                <MaintenancePage />
               </Layout>
             }
           />
@@ -53,7 +53,7 @@ function App() {
             path="/maintenance/:id"
             element={
               <Layout>
-                <Maintenance />
+                <MaintenancePage />
               </Layout>
             }
           />
@@ -61,7 +61,7 @@ function App() {
             path="/providers"
             element={
               <Layout>
-                <Providers />
+                <ProvidersPage />
               </Layout>
             }
           />
@@ -69,7 +69,7 @@ function App() {
             path="/providers/:id"
             element={
               <Layout>
-                <Providers />
+                <ProvidersPage />
               </Layout>
             }
           />
