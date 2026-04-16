@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { ProvidersPage } from './pages/ProvidersPage';
+import { CalendarPage } from './pages/CalendarPage';
 import { Settings } from './pages/Settings';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -78,6 +79,14 @@ function App() {
             element={
               <Layout>
                 <ProvidersPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <Layout>
+                <CalendarPage />
               </Layout>
             }
           />

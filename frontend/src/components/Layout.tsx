@@ -1,5 +1,5 @@
 import { AppShell, Box, Text, Stack, Button, Group, Container, Divider } from '@mantine/core';
-import { IconDashboard, IconBox, IconToolsOff, IconUserCheck, IconSettings } from '@tabler/icons-react';
+import { IconDashboard, IconBox, IconToolsOff, IconUserCheck, IconCalendar, IconSettings } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { SaveWindowGeometry } from '../hooks/useApi';
@@ -17,9 +17,10 @@ const mainNavItems: NavItem[] = [
   { label: 'Properties', icon: <IconBox size={20} />, route: '/properties', hotkey: 'Cmd+2' },
   { label: 'Maintenance', icon: <IconToolsOff size={20} />, route: '/maintenance', hotkey: 'Cmd+3' },
   { label: 'Providers', icon: <IconUserCheck size={20} />, route: '/providers', hotkey: 'Cmd+4' },
+  { label: 'Calendar', icon: <IconCalendar size={20} />, route: '/calendar', hotkey: 'Cmd+5' },
 ];
 
-const settingsNav: NavItem = { label: 'Settings', icon: <IconSettings size={20} />, route: '/settings', hotkey: 'Cmd+5' };
+const settingsNav: NavItem = { label: 'Settings', icon: <IconSettings size={20} />, route: '/settings', hotkey: 'Cmd+6' };
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,8 +45,8 @@ export function Layout({ children }: LayoutProps) {
         return;
       }
 
-      // Handle Cmd+1-5 for navigation with cycling on double-tap
-      if (isMeta && key >= '1' && key <= '5') {
+      // Handle Cmd+1-6 for navigation with cycling on double-tap
+      if (isMeta && key >= '1' && key <= '6') {
         e.preventDefault();
         const allItems = [...mainNavItems, settingsNav];
         const index = parseInt(key) - 1;
