@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -8,6 +9,7 @@ interface ProvidersDetailProps {
 }
 
 export function ProvidersDetail({ id }: ProvidersDetailProps) {
+  const { save } = useServiceProviders();
   const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
   const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
@@ -38,7 +40,7 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
   const handleSave = async () => {
     if (provider) {
       try {
-        // TODO: Call save API
+        await save(provider);
         setIsDirty(false);
       } catch (err) {
         console.error('Failed to save:', err);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useMaintenanceEvents } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Textarea, NumberInput, Select } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -8,6 +9,7 @@ interface MaintenanceDetailProps {
 }
 
 export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
+  const { save } = useMaintenanceEvents();
   const [event, setEvent] = useState<db.MaintenanceEvent | null>(null);
   const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
@@ -40,7 +42,7 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
   const handleSave = async () => {
     if (event) {
       try {
-        // TODO: Call save API
+        await save(event);
         setIsDirty(false);
       } catch (err) {
         console.error('Failed to save:', err);

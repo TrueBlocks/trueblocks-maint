@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useProperty } from '../hooks/useApi';
+import { useProperty, useProperties } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -9,9 +9,31 @@ interface PropertiesDetailProps {
 }
 
 export function PropertiesDetail({ id }: PropertiesDetailProps) {
-  const { property, loading, save } = id ? (useProperty(id.toString()) as any) : { property: null, loading: false, save: async () => {} };
+  const existingHook = useProperty(id?.toString());
+  const createHook = useProperties();
   const [formData, setFormData] = useState<db.Property | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+
+  const property = id ? existingHook.property : null;
+  const loading = id ? existingHook.loading : false;
+  
+  // Use appropriate save function based on whether this is new or existing
+  const handleSave = async () => {
+    if (formData) {
+      try {
+        if (id) {
+          // Existing property
+          await existingHook.save(formData);
+        } else {
+          // New property
+          await createHook.save(formData);
+        }
+        setIsDirty(false);
+      } catch (err) {
+        console.error('Failed to save:', err);
+      }
+    }
+  };
 
   // Initialize form with blank data for new properties
   useEffect(() => {
@@ -32,17 +54,6 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
       });
     }
   }, [property, id]);
-
-  const handleSave = async () => {
-    if (formData) {
-      try {
-        await save(formData);
-        setIsDirty(false);
-      } catch (err) {
-        console.error('Failed to save:', err);
-      }
-    }
-  };
 
   const handleDelete = async () => {
     if (confirm('Are you sure you want to delete this property?')) {

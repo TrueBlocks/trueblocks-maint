@@ -29,25 +29,55 @@ export function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastHotkeyRef = useRef<string | null>(null);
+  const lastHotkeyTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMeta = e.metaKey || e.ctrlKey;
-      const key = e.key;
+      const key = e.key.toLowerCase();
 
+      // Handle Cmd+R for refresh
+      if (isMeta && key === 'r') {
+        e.preventDefault();
+        window.location.reload();
+        return;
+      }
+
+      // Handle Cmd+1-5 for navigation with cycling on double-tap
       if (isMeta && key >= '1' && key <= '5') {
         e.preventDefault();
         const allItems = [...mainNavItems, settingsNav];
         const index = parseInt(key) - 1;
         if (index < allItems.length) {
-          navigate(allItems[index].route);
+          const targetRoute = allItems[index].route;
+          const now = Date.now();
+          const timeSinceLastHotkey = now - lastHotkeyTimeRef.current;
+          
+          // If same hotkey pressed within 500ms, toggle list/detail
+          if (lastHotkeyRef.current === key && timeSinceLastHotkey < 500) {
+            const pathname = location.pathname;
+            // If we're on the page's list, go to detail of first item
+            if (pathname === targetRoute || !pathname.startsWith(targetRoute)) {
+              navigate(`${targetRoute}/1`);
+            } else {
+              // If we're on detail, go back to list
+              navigate(targetRoute);
+            }
+          } else {
+            // First press - navigate to page list view
+            navigate(targetRoute);
+          }
+          
+          lastHotkeyRef.current = key;
+          lastHotkeyTimeRef.current = now;
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, location]);
 
   // Save window geometry when window is resized or moved
   useEffect(() => {
