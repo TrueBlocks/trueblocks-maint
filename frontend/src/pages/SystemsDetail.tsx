@@ -63,9 +63,13 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
       }
       setIsDirty(false);
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Saving system failed: ${err.message}`
+        : `Saving system failed: ${JSON.stringify(err)}`;
+      console.error('Error saving system:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to save system',
+        message: errorMessage,
         color: 'red',
       });
     } finally {
@@ -86,9 +90,13 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
       });
       navigate(`/properties/${propertyId}`);
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Deleting system failed: ${err.message}`
+        : `Deleting system failed: ${JSON.stringify(err)}`;
+      console.error('Error deleting system:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete system',
+        message: errorMessage,
         color: 'red',
       });
     } finally {

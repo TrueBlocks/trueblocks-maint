@@ -68,9 +68,13 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
       }
       setIsDirty(false);
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Saving maintenance event failed: ${err.message}`
+        : `Saving maintenance event failed: ${JSON.stringify(err)}`;
+      console.error('Error saving maintenance event:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to save maintenance event',
+        message: errorMessage,
         color: 'red',
       });
     } finally {
@@ -91,9 +95,13 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
       });
       navigate('/maintenance');
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Deleting maintenance event failed: ${err.message}`
+        : `Deleting maintenance event failed: ${JSON.stringify(err)}`;
+      console.error('Error deleting maintenance event:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete maintenance event',
+        message: errorMessage,
         color: 'red',
       });
     } finally {

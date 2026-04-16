@@ -78,9 +78,12 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
         if (err.message.includes('UNIQUE')) {
           errorMessage = 'A property with this name already exists';
         } else {
-          errorMessage = err.message;
+          errorMessage = `Saving property failed: ${err.message}`;
         }
+      } else {
+        errorMessage = `Saving property failed: ${JSON.stringify(err)}`;
       }
+      console.error('Error saving property:', err);
       notifications.show({
         title: 'Error',
         message: errorMessage,
@@ -104,9 +107,13 @@ export function PropertiesDetail({ id }: PropertiesDetailProps) {
       });
       navigate('/properties');
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Deleting property failed: ${err.message}`
+        : `Deleting property failed: ${JSON.stringify(err)}`;
+      console.error('Error deleting property:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete property',
+        message: errorMessage,
         color: 'red',
       });
     } finally {

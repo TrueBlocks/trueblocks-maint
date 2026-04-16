@@ -62,9 +62,13 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
       }
       setIsDirty(false);
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Saving service provider failed: ${err.message}`
+        : `Saving service provider failed: ${JSON.stringify(err)}`;
+      console.error('Error saving service provider:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to save service provider',
+        message: errorMessage,
         color: 'red',
       });
     } finally {
@@ -85,9 +89,13 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
       });
       navigate('/providers');
     } catch (err) {
+      const errorMessage = err instanceof Error 
+        ? `Deleting service provider failed: ${err.message}`
+        : `Deleting service provider failed: ${JSON.stringify(err)}`;
+      console.error('Error deleting service provider:', err);
       notifications.show({
         title: 'Error',
-        message: err instanceof Error ? err.message : 'Failed to delete service provider',
+        message: errorMessage,
         color: 'red',
       });
     } finally {
