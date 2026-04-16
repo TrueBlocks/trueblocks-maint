@@ -145,6 +145,33 @@ export function useSystems(propertyId?: string) {
   return { systems, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
 }
 
+export function useSystem(id?: string) {
+  const [system, setSystem] = useState<db.System | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await AppAPI.GetSystem(id);
+        setSystem(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, [id]);
+
+  return { system, loading, error };
+}
+
 export function useMaintenanceEvents(propertyId?: string) {
   const [events, setEvents] = useState<db.MaintenanceEvent[]>([]);
   const [loading, setLoading] = useState(false);

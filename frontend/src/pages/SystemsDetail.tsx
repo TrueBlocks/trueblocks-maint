@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSystems } from '../hooks/useApi';
+import { useSystem, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -14,6 +14,11 @@ interface SystemsDetailProps {
 export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
   const navigate = useNavigate();
   const { save, delete_ } = useSystems(propertyId);
+  
+  // Load single system when editing
+  const isEditing = id && id !== 'new';
+  const { system: loadedSystem, loading: systemLoading } = useSystem(isEditing ? id : undefined);
+  
   const [system, setSystem] = useState<db.System | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,24 +111,24 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
   };
 
   useEffect(() => {
-    if (id) {
-      setSystem({
-        id,
-        propertyID: propertyId,
-        name: '',
-        type: '',
-      });
-    } else {
-      setSystem({
+    // Initialize system from loaded data when editing or create new
+    if (isEditing && loadedSystem) {
+      setSystem(loadedSystem);
+      setIsDirty(false);
+    } else if (!isEditing) {
+      // Creating new system - initialize with defaults
+      const defaultSystem: db.System = {
         id: undefined,
         propertyID: propertyId,
         name: '',
         type: '',
-      });
+      };
+      setSystem(defaultSystem);
+      setIsDirty(false);
     }
-  }, [id, propertyId]);
+  }, [isEditing, loadedSystem, propertyId]);
 
-  if (!system) {
+  if ((isEditing && systemLoading) || !system) {
     return (
       <Center h={400}>
         <Loader />
