@@ -6,23 +6,23 @@ import (
 )
 
 type MaintenanceEvent struct {
-	ID                 string   `json:"id"`
-	PropertyID         string   `json:"property_id"`
-	SystemID           string   `json:"system_id"`
-	Description        string   `json:"description"`
-	Type               string   `json:"type"`
-	RepeatType         string   `json:"repeat_type"`
-	RepeatIntervalDays int      `json:"repeat_interval_days"`
-	FirstDueDate       string   `json:"first_due_date"`
-	NextDueDate        string   `json:"next_due_date"`
-	LastCompletedDate  *string  `json:"last_completed_date"`
-	CompletedCount     int      `json:"completed_count"`
-	NotifyDaysBefore   int      `json:"notify_days_before"`
-	AssignedProviderID *string  `json:"assigned_provider_id"`
-	EstimatedCost      float64  `json:"estimated_cost"`
-	Notes              string   `json:"notes"`
-	CreatedAt          string   `json:"created_at"`
-	UpdatedAt          string   `json:"updated_at"`
+	ID                 string  `json:"id"`
+	PropertyID         string  `json:"property_id"`
+	SystemID           string  `json:"system_id"`
+	Description        string  `json:"description"`
+	Type               string  `json:"type"`
+	RepeatType         string  `json:"repeat_type"`
+	RepeatIntervalDays int     `json:"repeat_interval_days"`
+	FirstDueDate       string  `json:"first_due_date"`
+	NextDueDate        string  `json:"next_due_date"`
+	LastCompletedDate  *string `json:"last_completed_date"`
+	CompletedCount     int     `json:"completed_count"`
+	NotifyDaysBefore   int     `json:"notify_days_before"`
+	AssignedProviderID *string `json:"assigned_provider_id"`
+	EstimatedCost      float64 `json:"estimated_cost"`
+	Notes              string  `json:"notes"`
+	CreatedAt          string  `json:"created_at"`
+	UpdatedAt          string  `json:"updated_at"`
 }
 
 func (db *DB) GetMaintenanceEvents(propertyID string) ([]MaintenanceEvent, error) {

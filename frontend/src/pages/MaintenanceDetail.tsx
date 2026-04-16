@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMaintenanceEvents, useProperties, useSystems } from '../hooks/useApi';
+import { useMaintenanceEvents, useMaintenanceEvent, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay, NumberInput, Textarea, Select } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -17,8 +17,11 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const { systems } = useSystems(selectedPropertyId || undefined);
   
+  // Load single event when editing
+  const isEditing = id && id !== 'new';
+  const { event: loadedEvent, loading: eventLoading } = useMaintenanceEvent(isEditing ? id : undefined);
+  
   const [event, setEvent] = useState<db.MaintenanceEvent | null>(null);
-  const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -120,27 +123,16 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
   };
 
   useEffect(() => {
-    if (id && id !== 'new') {
-      setLoading(false);
-      setEvent({
-        id: id.toString(),
-        property_id: '',
-        system_id: '',
-        description: '',
-        type: '',
-        repeat_type: 'once',
-        repeat_interval_days: undefined,
-        first_due_date: new Date().toISOString().split('T')[0],
-        next_due_date: new Date().toISOString().split('T')[0],
-        last_completed_date: undefined,
-        completed_count: 0,
-        notify_days_before: 7,
-        assigned_provider_id: undefined,
-        estimated_cost: 0,
-        notes: '',
-      });
-    } else {
-      setEvent({
+    // Initialize event from loaded data when editing or create new
+    if (isEditing && loadedEvent) {
+      setEvent(loadedEvent);
+      if (loadedEvent.property_id) {
+        setSelectedPropertyId(loadedEvent.property_id);
+      }
+      setIsDirty(false);
+    } else if (!isEditing) {
+      // Creating new event - initialize with defaults
+      const defaultEvent: db.MaintenanceEvent = {
         id: undefined,
         property_id: '',
         system_id: '',
@@ -156,9 +148,11 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
         assigned_provider_id: undefined,
         estimated_cost: 0,
         notes: '',
-      });
+      };
+      setEvent(defaultEvent);
+      setIsDirty(false);
     }
-  }, [id]);
+  }, [isEditing, loadedEvent]);
 
   // When property is selected, update state and clear system selection
   const handlePropertyChange = (value: string | null) => {
@@ -170,7 +164,7 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
     }
   };
 
-  if ((id && id !== 'new' && loading) || !event) {
+  if ((isEditing && eventLoading) || !event) {
     return (
       <Center h={400}>
         <Loader />

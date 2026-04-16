@@ -197,6 +197,33 @@ export function useMaintenanceEvents(propertyId?: string) {
   return { events, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
 }
 
+export function useMaintenanceEvent(id?: string) {
+  const [event, setEvent] = useState<db.MaintenanceEvent | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await AppAPI.GetMaintenanceEvent(id);
+        setEvent(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, [id]);
+
+  return { event, loading, error };
+}
+
 export function useServiceProviders() {
   const [providers, setProviders] = useState<db.ServiceProvider[]>([]);
   const [loading, setLoading] = useState(false);
