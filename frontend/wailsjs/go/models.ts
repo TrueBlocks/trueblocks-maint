@@ -141,22 +141,22 @@ export namespace db {
 	}
 	export class MaintenanceEvent {
 	    id: string;
-	    propertyId: string;
-	    systemId: string;
+	    property_id: string;
+	    system_id: string;
 	    description: string;
 	    type: string;
-	    repeatType: string;
-	    repeatIntervalDays: number;
-	    firstDueDate: string;
-	    nextDueDate: string;
-	    lastCompletedDate: string;
-	    completedCount: number;
-	    notifyDaysBefore: number;
-	    assignedProviderId: string;
-	    estimatedCost: number;
+	    repeat_type: string;
+	    repeat_interval_days: number;
+	    first_due_date: string;
+	    next_due_date: string;
+	    last_completed_date: string;
+	    completed_count: number;
+	    notify_days_before: number;
+	    assigned_provider_id: string;
+	    estimated_cost: number;
 	    notes: string;
-	    createdAt: string;
-	    updatedAt: string;
+	    created_at: string;
+	    updated_at: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new MaintenanceEvent(source);
@@ -165,22 +165,22 @@ export namespace db {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
-	        this.propertyId = source["propertyId"];
-	        this.systemId = source["systemId"];
+	        this.property_id = source["property_id"];
+	        this.system_id = source["system_id"];
 	        this.description = source["description"];
 	        this.type = source["type"];
-	        this.repeatType = source["repeatType"];
-	        this.repeatIntervalDays = source["repeatIntervalDays"];
-	        this.firstDueDate = source["firstDueDate"];
-	        this.nextDueDate = source["nextDueDate"];
-	        this.lastCompletedDate = source["lastCompletedDate"];
-	        this.completedCount = source["completedCount"];
-	        this.notifyDaysBefore = source["notifyDaysBefore"];
-	        this.assignedProviderId = source["assignedProviderId"];
-	        this.estimatedCost = source["estimatedCost"];
+	        this.repeat_type = source["repeat_type"];
+	        this.repeat_interval_days = source["repeat_interval_days"];
+	        this.first_due_date = source["first_due_date"];
+	        this.next_due_date = source["next_due_date"];
+	        this.last_completed_date = source["last_completed_date"];
+	        this.completed_count = source["completed_count"];
+	        this.notify_days_before = source["notify_days_before"];
+	        this.assigned_provider_id = source["assigned_provider_id"];
+	        this.estimated_cost = source["estimated_cost"];
 	        this.notes = source["notes"];
-	        this.createdAt = source["createdAt"];
-	        this.updatedAt = source["updatedAt"];
+	        this.created_at = source["created_at"];
+	        this.updated_at = source["updated_at"];
 	    }
 	}
 	export class CompletionResult {
@@ -247,7 +247,7 @@ export namespace db {
 	}
 	export class ServiceProvider {
 	    id: string;
-	    propertyId: string;
+	    propertyID: string;
 	    name: string;
 	    specialty: string;
 	    phone: string;
@@ -264,7 +264,7 @@ export namespace db {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
-	        this.propertyId = source["propertyId"];
+	        this.propertyID = source["propertyID"];
 	        this.name = source["name"];
 	        this.specialty = source["specialty"];
 	        this.phone = source["phone"];
@@ -277,12 +277,12 @@ export namespace db {
 	}
 	export class System {
 	    id: string;
-	    propertyId: string;
+	    propertyID: string;
 	    name: string;
 	    type: string;
 	    model: string;
 	    serial: string;
-	    ageYears: number;
+	    age: number;
 	    notes: string;
 	    createdAt: string;
 	    updatedAt: string;
@@ -294,12 +294,12 @@ export namespace db {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
-	        this.propertyId = source["propertyId"];
+	        this.propertyID = source["propertyID"];
 	        this.name = source["name"];
 	        this.type = source["type"];
 	        this.model = source["model"];
 	        this.serial = source["serial"];
-	        this.ageYears = source["ageYears"];
+	        this.age = source["age"];
 	        this.notes = source["notes"];
 	        this.createdAt = source["createdAt"];
 	        this.updatedAt = source["updatedAt"];

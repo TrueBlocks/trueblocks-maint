@@ -4,7 +4,7 @@ import "fmt"
 
 type ServiceProvider struct {
 	ID         string `json:"id"`
-	PropertyID string `json:"propertyId"`
+	PropertyID string `json:"propertyID"`
 	Name       string `json:"name"`
 	Specialty  string `json:"specialty"`
 	Phone      string `json:"phone"`

@@ -31,6 +31,15 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
     if (!event?.system_id?.trim()) newErrors.system_id = 'System is required';
     if (!event?.description?.trim()) newErrors.description = 'Description is required';
     if (!event?.type?.trim()) newErrors.type = 'Type is required';
+    
+    // Verify that selected system belongs to selected property
+    if (event?.property_id && event?.system_id && systems.length > 0) {
+      const systemExists = systems.some(s => s.id === event.system_id);
+      if (!systemExists) {
+        newErrors.system_id = 'Selected system does not belong to this property';
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

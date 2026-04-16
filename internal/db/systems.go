@@ -4,12 +4,12 @@ import "fmt"
 
 type System struct {
 	ID         string `json:"id"`
-	PropertyID string `json:"propertyId"`
+	PropertyID string `json:"propertyID"`
 	Name       string `json:"name"`
 	Type       string `json:"type"`
 	Model      string `json:"model"`
 	Serial     string `json:"serial"`
-	AgeYears   int    `json:"ageYears"`
+	AgeYears   int    `json:"age"`
 	Notes      string `json:"notes"`
 	CreatedAt  string `json:"createdAt"`
 	UpdatedAt  string `json:"updatedAt"`
