@@ -1,22 +1,103 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
-import { Card, Stack, TextInput, Group, Button, Loader, Center } from '@mantine/core';
+import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 
 interface ProvidersDetailProps {
   id?: number | null;
 }
 
 export function ProvidersDetail({ id }: ProvidersDetailProps) {
-  const { save } = useServiceProviders();
+  const navigate = useNavigate();
+  const { save, delete_ } = useServiceProviders();
   const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
   const [loading, setLoading] = useState(id ? true : false);
   const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!provider?.name?.trim()) newErrors.name = 'Name is required';
+    if (!provider?.specialty?.trim()) newErrors.specialty = 'Specialty is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) {
+      notifications.show({
+        title: 'Validation Error',
+        message: 'Please fill in all required fields',
+        color: 'red',
+      });
+      return;
+    }
+
+    if (!provider) return;
+    setIsSaving(true);
+
+    try {
+      if (id) {
+        await save(provider);
+        notifications.show({
+          title: 'Success',
+          message: 'Service provider updated successfully',
+          color: 'green',
+        });
+      } else {
+        const newProvider = { ...provider, id: `prov_${Date.now()}` };
+        await save(newProvider);
+        notifications.show({
+          title: 'Success',
+          message: 'Service provider created successfully',
+          color: 'green',
+        });
+        navigate('/providers');
+      }
+      setIsDirty(false);
+    } catch (err) {
+      notifications.show({
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Failed to save service provider',
+        color: 'red',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+
+    try {
+      await delete_(id.toString());
+      notifications.show({
+        title: 'Success',
+        message: 'Service provider deleted successfully',
+        color: 'green',
+      });
+      navigate('/providers');
+    } catch (err) {
+      notifications.show({
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Failed to delete service provider',
+        color: 'red',
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
-      // TODO: Implement GetServiceProvider from backend
       setLoading(false);
       setProvider({
         id: id.toString(),
@@ -26,7 +107,6 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
         email: '',
       });
     } else {
-      // New provider - start with blank form
       setProvider({
         id: undefined,
         name: '',
@@ -37,24 +117,6 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
     }
   }, [id]);
 
-  const handleSave = async () => {
-    if (provider) {
-      try {
-        await save(provider);
-        setIsDirty(false);
-      } catch (err) {
-        console.error('Failed to save:', err);
-      }
-    }
-  };
-
-  const handleDelete = async () => {
-    if (confirm('Are you sure you want to delete this provider?')) {
-      // TODO: Implement delete
-      console.log('Delete provider:', id);
-    }
-  };
-
   if ((id && loading) || !provider) {
     return (
       <Center h={400}>
@@ -64,65 +126,102 @@ export function ProvidersDetail({ id }: ProvidersDetailProps) {
   }
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between">
-        <h2>{provider.name || 'Service Provider'}</h2>
-        <Group gap="xs">
-          <Button
-            leftSection={<IconCheck size={16} />}
-            onClick={handleSave}
-            disabled={!isDirty}
-          >
-            Save
-          </Button>
-          <Button
-            color="red"
-            variant="light"
-            leftSection={<IconTrash size={16} />}
-            onClick={handleDelete}
-          >
-            Delete
-          </Button>
-        </Group>
-      </Group>
+    <>
+      <Stack gap="lg" style={{ position: 'relative' }}>
+        <LoadingOverlay visible={isSaving} zIndex={1000} overlayProps={{ radius: 'sm', blur: 2 }} />
 
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <Group justify="space-between">
+          <h2>{provider.name || 'Service Provider'}</h2>
+          <Group gap="xs">
+            <Button
+              leftSection={<IconCheck size={16} />}
+              onClick={handleSave}
+              disabled={!isDirty}
+              loading={isSaving}
+            >
+              Save
+            </Button>
+            {id && (
+              <Button
+                color="red"
+                variant="light"
+                leftSection={<IconTrash size={16} />}
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={isSaving}
+              >
+                Delete
+              </Button>
+            )}
+          </Group>
+        </Group>
+
+        <Card shadow="sm" padding="lg" radius="md" withBorder>
+          <Stack gap="md">
+            <TextInput
+              label="Name *"
+              value={provider.name || ''}
+              onChange={(e) => {
+                setProvider({ ...provider, name: e.currentTarget.value });
+                setIsDirty(true);
+                if (errors.name) setErrors({ ...errors, name: '' });
+              }}
+              error={errors.name}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Specialty *"
+              value={provider.specialty || ''}
+              onChange={(e) => {
+                setProvider({ ...provider, specialty: e.currentTarget.value });
+                setIsDirty(true);
+                if (errors.specialty) setErrors({ ...errors, specialty: '' });
+              }}
+              error={errors.specialty}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Phone"
+              value={provider.phone || ''}
+              onChange={(e) => {
+                setProvider({ ...provider, phone: e.currentTarget.value });
+                setIsDirty(true);
+              }}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Email"
+              type="email"
+              value={provider.email || ''}
+              onChange={(e) => {
+                setProvider({ ...provider, email: e.currentTarget.value });
+                setIsDirty(true);
+              }}
+              disabled={isSaving}
+            />
+          </Stack>
+        </Card>
+      </Stack>
+
+      <Modal
+        opened={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="Confirm Delete"
+        centered
+      >
         <Stack gap="md">
-          <TextInput
-            label="Name"
-            value={provider.name || ''}
-            onChange={(e) => {
-              setProvider({ ...provider, name: e.currentTarget.value });
-              setIsDirty(true);
-            }}
-          />
-          <TextInput
-            label="Specialty"
-            value={provider.specialty || ''}
-            onChange={(e) => {
-              setProvider({ ...provider, specialty: e.currentTarget.value });
-              setIsDirty(true);
-            }}
-          />
-          <TextInput
-            label="Phone"
-            value={provider.phone || ''}
-            onChange={(e) => {
-              setProvider({ ...provider, phone: e.currentTarget.value });
-              setIsDirty(true);
-            }}
-          />
-          <TextInput
-            label="Email"
-            type="email"
-            value={provider.email || ''}
-            onChange={(e) => {
-              setProvider({ ...provider, email: e.currentTarget.value });
-              setIsDirty(true);
-            }}
-          />
+          <Text>
+            Are you sure you want to delete <strong>{provider.name}</strong>? This action cannot be undone.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => setDeleteConfirmOpen(false)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button color="red" onClick={handleDelete} loading={isDeleting}>
+              Delete
+            </Button>
+          </Group>
         </Stack>
-      </Card>
-    </Stack>
+      </Modal>
+    </>
   );
 }
