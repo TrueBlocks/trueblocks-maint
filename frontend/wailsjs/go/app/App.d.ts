@@ -41,6 +41,14 @@ export function GetTabRoute(arg1:string):Promise<string>;
 
 export function GetTableState(arg1:string):Promise<appkit.TableState>;
 
+export function LogDebug(arg1:string):Promise<void>;
+
+export function LogError(arg1:string):Promise<void>;
+
+export function LogInfo(arg1:string):Promise<void>;
+
+export function LogWarning(arg1:string):Promise<void>;
+
 export function SaveLastRoute(arg1:string):Promise<void>;
 
 export function SaveMaintenanceEvent(arg1:db.MaintenanceEvent):Promise<db.MaintenanceEvent>;

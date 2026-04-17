@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
@@ -11,9 +11,19 @@ import { Tabs } from '@mantine/core';
 export function MaintenancePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [filteredEvents, setFilteredEvents] = useState<db.MaintenanceEvent[]>([]);
+  const hasInitializedRef = useRef(false);
   const isNew = id === 'new';
-  const hasDetail = !!id;
   const { events } = useMaintenanceEvents() as any;
+
+  useEffect(() => {
+    if (!hasInitializedRef.current && events) {
+      hasInitializedRef.current = true;
+      setFilteredEvents(events);
+    }
+  }, [events]);
+
+  const [activeTab, setActiveTab] = useState<string | null>('list');
 
   const handleItemClick = useCallback(
     (item: db.MaintenanceEvent) => {
@@ -26,13 +36,12 @@ export function MaintenancePage() {
     navigate('/maintenance/new');
   }, [navigate]);
 
-  // Determine active tab based on URL
-  const activeTab = useMemo(() => {
-    if (hasDetail) return 'detail';
-    return 'list';
-  }, [hasDetail]);
+  const handleFilteredDataChange = useCallback((evts: db.MaintenanceEvent[]) => {
+    setFilteredEvents(evts);
+  }, []);
 
   const handleTabChange = (tabValue: string | null) => {
+    setActiveTab(tabValue);
     if (tabValue === 'list') {
       navigate('/maintenance');
     }
@@ -47,18 +56,20 @@ export function MaintenancePage() {
       <Tabs value={activeTab} onChange={handleTabChange} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Tabs.List>
           <Tabs.Tab value="list">Events</Tabs.Tab>
-          {hasDetail && <Tabs.Tab value="detail">{id === 'new' ? 'New Event' : events?.find((e: db.MaintenanceEvent) => e.id === id)?.description || 'Event'}</Tabs.Tab>}
+          <Tabs.Tab value="detail">Detail</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="list" style={{ flex: 1, overflow: 'auto' }}>
-          <MaintenanceList onItemClick={handleItemClick} onAddClick={handleAddClick} />
+          <MaintenanceList 
+            onItemClick={handleItemClick} 
+            onAddClick={handleAddClick}
+            onFilteredDataChange={handleFilteredDataChange}
+          />
         </Tabs.Panel>
 
-        {hasDetail && (
-          <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
-            <MaintenanceDetail id={id} />
-          </Tabs.Panel>
-        )}
+        <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
+          <MaintenanceDetail id={id} filteredEvents={filteredEvents} />
+        </Tabs.Panel>
       </Tabs>
     </NavigationProvider>
   );

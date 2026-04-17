@@ -2,66 +2,76 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
-import { PropertiesList } from './PropertiesList';
-import { PropertiesDetail } from './PropertiesDetail';
-import { useProperties } from '../hooks/useApi';
+import { SystemsList } from './SystemsList';
+import { SystemsDetail } from './SystemsDetail';
+import { useAllSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Tabs } from '@mantine/core';
+import { logger } from '../utils/logger';
 
-export function PropertiesPage() {
+export function SystemsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [filteredProperties, setFilteredProperties] = useState<db.Property[]>([]);
+  const [filteredSystems, setFilteredSystems] = useState<db.System[]>([]);
   const hasInitializedRef = useRef(false);
   
+  logger.info('SystemsPage: render', { id });
+
   const isNew = id === 'new';
-  const { properties } = useProperties() as any;
+  const { systems } = useAllSystems() as any;
 
   useEffect(() => {
-    if (!hasInitializedRef.current && properties) {
+    logger.info('SystemsPage: useEffect - systems data', { count: systems?.length || 0, systems });
+    if (!hasInitializedRef.current && systems) {
       hasInitializedRef.current = true;
-      setFilteredProperties(properties);
+      setFilteredSystems(systems);
+      logger.info('SystemsPage: Initialized filtered systems', { count: systems.length });
     }
-  }, [properties]);
+  }, [systems]);
 
   const [activeTab, setActiveTab] = useState<string | null>('list');
 
   const handleItemClick = useCallback(
-    (item: db.Property) => {
-      navigate(`/properties/${item.id}`);
+    (item: db.System) => {
+      logger.info('SystemsPage: Item clicked', { id: item.id, name: item.name });
+      navigate(`/systems/${item.id}`);
     },
     [navigate],
   );
 
   const handleAddClick = useCallback(() => {
-    navigate('/properties/new');
+    logger.info('SystemsPage: Add clicked');
+    navigate('/systems/new');
   }, [navigate]);
 
-  const handleFilteredDataChange = useCallback((props: db.Property[]) => {
-    setFilteredProperties(props);
+  const handleFilteredDataChange = useCallback((syss: db.System[]) => {
+    logger.info('SystemsPage: Filtered data changed', { count: syss.length });
+    setFilteredSystems(syss);
   }, []);
 
   const handleTabChange = (tabValue: string | null) => {
+    logger.info('SystemsPage: Tab changed', { from: activeTab, to: tabValue });
     setActiveTab(tabValue);
     if (tabValue === 'list') {
-      navigate('/properties');
+      navigate('/systems');
     }
   };
 
   useEffect(() => {
-    SetTab('properties', activeTab);
+    logger.info('SystemsPage: Tab state saved', { activeTab });
+    SetTab('systems', activeTab);
   }, [activeTab]);
 
   return (
     <NavigationProvider>
       <Tabs value={activeTab} onChange={handleTabChange} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Tabs.List>
-          <Tabs.Tab value="list">Properties</Tabs.Tab>
+          <Tabs.Tab value="list">Systems</Tabs.Tab>
           <Tabs.Tab value="detail">Detail</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="list" style={{ flex: 1, overflow: 'auto' }}>
-          <PropertiesList 
+          <SystemsList 
             onItemClick={handleItemClick} 
             onAddClick={handleAddClick}
             onFilteredDataChange={handleFilteredDataChange}
@@ -69,7 +79,7 @@ export function PropertiesPage() {
         </Tabs.Panel>
 
         <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
-          <PropertiesDetail id={id} filteredProperties={filteredProperties} />
+          <SystemsDetail id={id} filteredSystems={filteredSystems} />
         </Tabs.Panel>
       </Tabs>
     </NavigationProvider>

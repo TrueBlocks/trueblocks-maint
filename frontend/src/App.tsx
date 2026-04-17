@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { ProvidersPage } from './pages/ProvidersPage';
+import { SystemsPage } from './pages/SystemsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { Settings } from './pages/Settings';
 import '@mantine/core/styles.css';
@@ -43,10 +44,18 @@ function App() {
             }
           />
           <Route
-            path="/properties/:propertyId/systems/:systemId"
+            path="/systems"
             element={
               <Layout>
-                <PropertiesPage />
+                <SystemsPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/systems/:id"
+            element={
+              <Layout>
+                <SystemsPage />
               </Layout>
             }
           />

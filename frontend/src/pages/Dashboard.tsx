@@ -107,7 +107,7 @@ export function Dashboard() {
               radius="md" 
               withBorder
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/properties')}
+              onClick={() => navigate('/systems')}
             >
               <Stack gap="xs">
                 <Text fw={500} c="dimmed" size="sm">

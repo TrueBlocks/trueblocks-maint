@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useHotkeys } from '@mantine/hooks';
+import { useNavigation } from '@trueblocks/scaffold';
 import { useMaintenanceEvents, useMaintenanceEvent, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay, NumberInput, Textarea, Select } from '@mantine/core';
@@ -8,10 +10,12 @@ import { notifications } from '@mantine/notifications';
 
 interface MaintenanceDetailProps {
   id?: string | null;
+  filteredEvents?: db.MaintenanceEvent[];
 }
 
-export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
+export function MaintenanceDetail({ id, filteredEvents = [] }: MaintenanceDetailProps) {
   const navigate = useNavigate();
+  const { stack, currentLevel, currentIndex, hasPrev, hasNext, setItems, setCurrentId } = useNavigation();
   const { save, delete_ } = useMaintenanceEvents();
   const { properties } = useProperties();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
@@ -27,6 +31,80 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set up navigation stack from filtered events
+  const stackLength = stack.length;
+  useEffect(() => {
+    if (stackLength === 0 && filteredEvents.length > 0 && id && id !== 'new') {
+      const currentIndex = filteredEvents.findIndex((e) => e.id === id);
+      const items = filteredEvents.map((_, idx) => ({ id: idx }));
+      if (currentIndex >= 0) {
+        setItems('event', items, currentIndex);
+      }
+    }
+  }, [stackLength, filteredEvents, id, setItems]);
+
+  // Keep current ID in sync
+  useEffect(() => {
+    if (id && id !== 'new') {
+      const currentIndex = filteredEvents.findIndex((e) => e.id === id);
+      if (currentIndex >= 0) {
+        setCurrentId(currentIndex);
+      }
+    }
+  }, [id, filteredEvents, setCurrentId]);
+
+  // Navigation handlers - use index from navigation, map to actual ID from filtered list
+  const navigateToEvent = useCallback(
+    (navIndex: number) => {
+      if (navIndex >= 0 && navIndex < filteredEvents.length) {
+        const eventId = filteredEvents[navIndex].id;
+        if (eventId) {
+          navigate(`/maintenance/${eventId}`);
+        }
+      }
+    },
+    [navigate, filteredEvents]
+  );
+
+  const handlePrev = useCallback(() => {
+    if (!hasPrev || !currentLevel) return;
+    const prevIndex = currentIndex - 1;
+    navigateToEvent(prevIndex);
+  }, [hasPrev, currentIndex, currentLevel, navigateToEvent]);
+
+  const handleNext = useCallback(() => {
+    if (!hasNext || !currentLevel) return;
+    const nextIndex = currentIndex + 1;
+    navigateToEvent(nextIndex);
+  }, [hasNext, currentIndex, currentLevel, navigateToEvent]);
+
+  const handleHome = useCallback(() => {
+    if (!currentLevel || currentLevel.items.length === 0) return;
+    navigateToEvent(0);
+  }, [currentLevel, navigateToEvent]);
+
+  const handleEnd = useCallback(() => {
+    if (!currentLevel || currentLevel.items.length === 0) return;
+    navigateToEvent(currentLevel.items.length - 1);
+  }, [currentLevel, navigateToEvent]);
+
+  const handleReturnToList = useCallback(() => navigate('/maintenance'), [navigate]);
+
+  // Keyboard shortcuts
+  useHotkeys([
+    ['ArrowRight', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handleNext();
+    }, { preventDefault: false }],
+    ['ArrowLeft', (e) => {
+      const t = e.target as HTMLElement;
+      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handlePrev();
+    }, { preventDefault: false }],
+    ['Home', handleHome],
+    ['End', handleEnd],
+    ['mod+shift+ArrowLeft', handleReturnToList],
+  ]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -163,6 +241,14 @@ export function MaintenanceDetail({ id }: MaintenanceDetailProps) {
       if (errors.property_id) setErrors({ ...errors, property_id: '' });
     }
   };
+
+  if (!id) {
+    return (
+      <Center h={400}>
+        <Text c="dimmed">Select an event to view details</Text>
+      </Center>
+    );
+  }
 
   if ((isEditing && eventLoading) || !event) {
     return (

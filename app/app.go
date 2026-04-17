@@ -59,3 +59,20 @@ func (a *App) Shutdown(_ context.Context) {
 		a.db.Close()
 	}
 }
+
+// Logging methods - output to terminal where app is running
+func (a *App) LogDebug(message string) {
+	fmt.Printf("[DEBUG] %s\n", message)
+}
+
+func (a *App) LogInfo(message string) {
+	fmt.Printf("[INFO] %s\n", message)
+}
+
+func (a *App) LogWarning(message string) {
+	fmt.Printf("[WARN] %s\n", message)
+}
+
+func (a *App) LogError(message string) {
+	fmt.Printf("[ERROR] %s\n", message)
+}

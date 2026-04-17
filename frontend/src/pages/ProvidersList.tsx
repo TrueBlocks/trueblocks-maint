@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DataTable } from '../components/DataTable';
 import { useServiceProviders } from '../hooks/useApi';
+import { useNavigation } from '@trueblocks/scaffold';
 import { db } from '../types/models';
 import { Center, Loader, Group, Button } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
@@ -8,10 +9,12 @@ import { IconPlus } from '@tabler/icons-react';
 interface ProvidersListProps {
   onItemClick: (provider: db.ServiceProvider) => void;
   onAddClick?: () => void;
+  onFilteredDataChange?: (providers: db.ServiceProvider[]) => void;
 }
 
-export function ProvidersList({ onItemClick, onAddClick }: ProvidersListProps) {
+export function ProvidersList({ onItemClick, onAddClick, onFilteredDataChange }: ProvidersListProps) {
   const { providers, loading } = useServiceProviders() as any;
+  const { currentId, setCurrentId, setItems } = useNavigation();
   const [data, setData] = useState<db.ServiceProvider[]>([]);
 
   useEffect(() => {
@@ -19,6 +22,18 @@ export function ProvidersList({ onItemClick, onAddClick }: ProvidersListProps) {
       setData(providers);
     }
   }, [providers]);
+
+  const handleFilteredSortedChange = useCallback(
+    (filteredProviders: db.ServiceProvider[]) => {
+      onFilteredDataChange?.(filteredProviders);
+      const items = filteredProviders.map((p) => ({ id: p.id }));
+      const navCurrentId = currentId ?? filteredProviders[0]?.id ?? '';
+      if (navCurrentId) {
+        setItems('provider', items, parseInt(filteredProviders.findIndex((p) => p.id === navCurrentId).toString()) || 0);
+      }
+    },
+    [onFilteredDataChange, currentId, setItems]
+  );
 
   if (loading) {
     return (
@@ -49,6 +64,8 @@ export function ProvidersList({ onItemClick, onAddClick }: ProvidersListProps) {
         data={data}
         getRowKey={(item) => item.id?.toString() || ''}
         onRowClick={onItemClick}
+        onSelectedChange={(item) => setCurrentId(item.id as any)}
+        onFilteredSortedChange={handleFilteredSortedChange}
       />
     </div>
   );

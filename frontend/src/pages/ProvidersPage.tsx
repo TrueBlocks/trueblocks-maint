@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SetTab } from '../hooks/useApi';
 import { NavigationProvider } from '@trueblocks/scaffold';
@@ -11,9 +11,19 @@ import { Tabs } from '@mantine/core';
 export function ProvidersPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [filteredProviders, setFilteredProviders] = useState<db.ServiceProvider[]>([]);
+  const hasInitializedRef = useRef(false);
   const isNew = id === 'new';
-  const hasDetail = !!id;
   const { providers } = useServiceProviders() as any;
+
+  useEffect(() => {
+    if (!hasInitializedRef.current && providers) {
+      hasInitializedRef.current = true;
+      setFilteredProviders(providers);
+    }
+  }, [providers]);
+
+  const [activeTab, setActiveTab] = useState<string | null>('list');
 
   const handleItemClick = useCallback(
     (item: db.ServiceProvider) => {
@@ -26,13 +36,12 @@ export function ProvidersPage() {
     navigate('/providers/new');
   }, [navigate]);
 
-  // Determine active tab based on URL
-  const activeTab = useMemo(() => {
-    if (hasDetail) return 'detail';
-    return 'list';
-  }, [hasDetail]);
+  const handleFilteredDataChange = useCallback((provs: db.ServiceProvider[]) => {
+    setFilteredProviders(provs);
+  }, []);
 
   const handleTabChange = (tabValue: string | null) => {
+    setActiveTab(tabValue);
     if (tabValue === 'list') {
       navigate('/providers');
     }
@@ -47,18 +56,20 @@ export function ProvidersPage() {
       <Tabs value={activeTab} onChange={handleTabChange} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Tabs.List>
           <Tabs.Tab value="list">Providers</Tabs.Tab>
-          {hasDetail && <Tabs.Tab value="detail">{id === 'new' ? 'New Provider' : providers?.find((p: db.ServiceProvider) => p.id === id)?.name || 'Provider'}</Tabs.Tab>}
+          <Tabs.Tab value="detail">Detail</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="list" style={{ flex: 1, overflow: 'auto' }}>
-          <ProvidersList onItemClick={handleItemClick} onAddClick={handleAddClick} />
+          <ProvidersList 
+            onItemClick={handleItemClick} 
+            onAddClick={handleAddClick}
+            onFilteredDataChange={handleFilteredDataChange}
+          />
         </Tabs.Panel>
 
-        {hasDetail && (
-          <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
-            <ProvidersDetail id={id} />
-          </Tabs.Panel>
-        )}
+        <Tabs.Panel value="detail" style={{ flex: 1, overflow: 'auto' }}>
+          <ProvidersDetail id={id} filteredProviders={filteredProviders} />
+        </Tabs.Panel>
       </Tabs>
     </NavigationProvider>
   );

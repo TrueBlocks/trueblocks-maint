@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { db } from '../types/models';
+import { useRefresh } from './useRefresh';
+import { logger } from '../utils/logger';
 
 // Wails API bindings - imported as any to avoid module resolution issues
 const AppAPI: any = (window as any).go?.app?.App || {};
@@ -10,7 +12,7 @@ export function useProperties() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true);
     try {
       const data = await AppAPI.GetProperties();
@@ -21,11 +23,14 @@ export function useProperties() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetch();
-  }, []);
+  }, [fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(fetch);
 
   const save = async (property: db.Property) => {
     try {
@@ -98,7 +103,7 @@ export function useSystems(propertyId?: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = async (id: string) => {
+  const fetch = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const data = await AppAPI.GetSystems(id);
@@ -109,13 +114,20 @@ export function useSystems(propertyId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (propertyId) {
       fetch(propertyId);
     }
-  }, [propertyId]);
+  }, [propertyId, fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(useCallback(() => {
+    if (propertyId) {
+      fetch(propertyId);
+    }
+  }, [propertyId, fetch]));
 
   const save = async (system: db.System) => {
     try {
@@ -145,29 +157,106 @@ export function useSystems(propertyId?: string) {
   return { systems, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
 }
 
+export function useAllSystems() {
+  const [systems, setSystems] = useState<db.System[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = useCallback(async () => {
+    logger.info('useAllSystems: Starting fetch');
+    setLoading(true);
+    try {
+      // Load all properties first, then all systems
+      logger.info('useAllSystems: Calling GetProperties');
+      const props = await AppAPI.GetProperties();
+      logger.info('useAllSystems: GetProperties returned', { count: props?.length || 0, properties: props });
+      
+      const allSystems: db.System[] = [];
+      
+      for (const prop of props || []) {
+        if (prop.id) {
+          logger.info('useAllSystems: Calling GetSystems for property', { propertyId: prop.id, name: prop.name });
+          const propSystems = await AppAPI.GetSystems(prop.id);
+          logger.info('useAllSystems: GetSystems returned', { propertyId: prop.id, count: propSystems?.length || 0 });
+          allSystems.push(...(propSystems || []));
+        }
+      }
+      
+      logger.info('useAllSystems: Fetch complete', { totalSystems: allSystems.length });
+      setSystems(allSystems);
+      setError(null);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('useAllSystems: Fetch failed', err);
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    logger.info('useAllSystems: useEffect hook running');
+    fetch();
+  }, [fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(fetch);
+
+  const save = async (system: db.System) => {
+    try {
+      const updated = await AppAPI.SaveSystem(system);
+      setSystems((prev) =>
+        prev.some((s) => s.id === updated.id)
+          ? prev.map((s) => (s.id === updated.id ? updated : s))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteSystem(id);
+      setSystems((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { systems, loading, error, save, delete_, refetch: fetch };
+}
+
 export function useSystem(id?: string) {
   const [system, setSystem] = useState<db.System | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetch = useCallback(async (systemId: string) => {
+    setLoading(true);
+    try {
+      const data = await AppAPI.GetSystem(systemId);
+      setSystem(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!id) return;
+    fetch(id);
+  }, [id, fetch]);
 
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const data = await AppAPI.GetSystem(id);
-        setSystem(data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetch();
-  }, [id]);
+  // Subscribe to app refresh events
+  useRefresh(useCallback(() => {
+    if (id) fetch(id);
+  }, [id, fetch]));
 
   return { system, loading, error };
 }
@@ -177,7 +266,7 @@ export function useMaintenanceEvents(propertyId?: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = async (id: string) => {
+  const fetch = useCallback(async (id: string) => {
     setLoading(true);
     try {
       const data = await AppAPI.GetMaintenanceEvents(id);
@@ -188,13 +277,20 @@ export function useMaintenanceEvents(propertyId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (propertyId) {
       fetch(propertyId);
     }
-  }, [propertyId]);
+  }, [propertyId, fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(useCallback(() => {
+    if (propertyId) {
+      fetch(propertyId);
+    }
+  }, [propertyId, fetch]));
 
   const save = async (event: db.MaintenanceEvent) => {
     try {
@@ -230,30 +326,33 @@ export function useAllMaintenanceEvents() {
   const [error, setError] = useState<string | null>(null);
   const { properties } = useProperties();
 
-  useEffect(() => {
-    const fetchAllEvents = async () => {
-      setLoading(true);
-      try {
-        const allEvents: db.MaintenanceEvent[] = [];
-        for (const prop of (properties || [])) {
-          if (prop.id) {
-            const propEvents = await AppAPI.GetMaintenanceEvents(prop.id);
-            allEvents.push(...(propEvents || []));
-          }
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const allEvents: db.MaintenanceEvent[] = [];
+      for (const prop of (properties || [])) {
+        if (prop.id) {
+          const propEvents = await AppAPI.GetMaintenanceEvents(prop.id);
+          allEvents.push(...(propEvents || []));
         }
-        setEvents(allEvents);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (properties && properties.length > 0) {
-      fetchAllEvents();
+      setEvents(allEvents);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setLoading(false);
     }
   }, [properties]);
+
+  useEffect(() => {
+    if (properties && properties.length > 0) {
+      fetch();
+    }
+  }, [properties, fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(fetch);
 
   const save = async (event: db.MaintenanceEvent) => {
     try {
@@ -280,7 +379,7 @@ export function useAllMaintenanceEvents() {
     }
   };
 
-  return { events, loading, error, save, delete_ };
+  return { events, loading, error, save, delete_, refetch: fetch };
 }
 
 export function useMaintenanceEvent(id?: string) {
@@ -315,7 +414,7 @@ export function useServiceProviders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true);
     try {
       const data = await AppAPI.GetServiceProviders('');
@@ -326,11 +425,14 @@ export function useServiceProviders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetch();
-  }, []);
+  }, [fetch]);
+
+  // Subscribe to app refresh events
+  useRefresh(fetch);
 
   const save = async (provider: db.ServiceProvider) => {
     try {

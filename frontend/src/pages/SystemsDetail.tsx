@@ -1,19 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSystem, useSystems } from '../hooks/useApi';
+import { useSystem, useAllSystems } from '../hooks/useApi';
+import { useNavigation } from '@trueblocks/scaffold';
+import { useHotkeys } from '@mantine/hooks';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 
 interface SystemsDetailProps {
-  propertyId: string;
   id?: string | null;
+  filteredSystems?: db.System[];
 }
 
-export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
+export function SystemsDetail({ id, filteredSystems = [] }: SystemsDetailProps) {
   const navigate = useNavigate();
-  const { save, delete_ } = useSystems(propertyId);
+  const { save, delete_ } = useAllSystems();
+  const { stack, currentLevel, currentIndex, hasPrev, hasNext, setItems, setCurrentId } = useNavigation();
   
   // Load single system when editing
   const isEditing = id && id !== 'new';
@@ -25,6 +28,76 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Set up navigation stack from filtered systems
+  const stackLength = stack.length;
+  useEffect(() => {
+    if (stackLength === 0 && filteredSystems.length > 0 && id && id !== 'new') {
+      const currentIdx = filteredSystems.findIndex((s) => s.id === id);
+      const items = filteredSystems.map((_, idx) => ({ id: idx }));
+      if (currentIdx >= 0) {
+        setItems('system', items, currentIdx);
+      }
+    }
+  }, [stackLength, filteredSystems, id, setItems]);
+
+  // Keep current ID in sync
+  useEffect(() => {
+    if (id && id !== 'new') {
+      const currentIdx = filteredSystems.findIndex((s) => s.id === id);
+      if (currentIdx >= 0) {
+        setCurrentId(currentIdx);
+      }
+    }
+  }, [id, filteredSystems, setCurrentId]);
+
+  // Navigation handlers - use index from navigation, map to actual ID from filtered list
+  const navigateToSystem = useCallback(
+    (navIndex: number) => {
+      if (navIndex >= 0 && navIndex < filteredSystems.length) {
+        const systemId = filteredSystems[navIndex].id;
+        if (systemId) {
+          navigate(`/systems/${systemId}`);
+        }
+      }
+    },
+    [navigate, filteredSystems]
+  );
+
+  const handlePrev = useCallback(() => {
+    if (!hasPrev || !currentLevel) return;
+    const prevIndex = currentIndex - 1;
+    navigateToSystem(prevIndex);
+  }, [hasPrev, currentIndex, currentLevel, navigateToSystem]);
+
+  const handleNext = useCallback(() => {
+    if (!hasNext || !currentLevel) return;
+    const nextIndex = currentIndex + 1;
+    navigateToSystem(nextIndex);
+  }, [hasNext, currentIndex, currentLevel, navigateToSystem]);
+
+  const handleHome = useCallback(() => {
+    if (!currentLevel || currentLevel.items.length === 0) return;
+    navigateToSystem(0);
+  }, [currentLevel, navigateToSystem]);
+
+  const handleEnd = useCallback(() => {
+    if (!currentLevel || currentLevel.items.length === 0) return;
+    navigateToSystem(currentLevel.items.length - 1);
+  }, [currentLevel, navigateToSystem]);
+
+  const handleReturnToList = useCallback(() => {
+    navigate('/systems');
+  }, [navigate]);
+
+  // Set up hotkeys
+  useHotkeys([
+    ['ArrowLeft', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handlePrev(); }, { preventDefault: false }],
+    ['ArrowRight', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleNext(); }, { preventDefault: false }],
+    ['Home', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleHome(); }, { preventDefault: false }],
+    ['End', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleEnd(); }, { preventDefault: false }],
+    ['mod+shift+ArrowLeft', handleReturnToList],
+  ]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -48,23 +121,22 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
     setIsSaving(true);
 
     try {
-      const systemWithProperty = { ...system, propertyID: propertyId };
-      if (id) {
-        await save(systemWithProperty);
+      if (id && id !== 'new') {
+        await save(system);
         notifications.show({
           title: 'Success',
           message: 'System updated successfully',
           color: 'green',
         });
       } else {
-        const newSystem = { ...systemWithProperty, id: `sys_${Date.now()}` };
+        const newSystem = { ...system, id: `sys_${Date.now()}` };
         await save(newSystem);
         notifications.show({
           title: 'Success',
           message: 'System created successfully',
           color: 'green',
         });
-        navigate(`/properties/${propertyId}`);
+        navigate(`/systems/${newSystem.id}`);
       }
       setIsDirty(false);
     } catch (err) {
@@ -93,7 +165,7 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
         message: 'System deleted successfully',
         color: 'green',
       });
-      navigate(`/properties/${propertyId}`);
+      navigate('/systems');
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? `Deleting system failed: ${err.message}`
@@ -119,14 +191,21 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
       // Creating new system - initialize with defaults
       const defaultSystem: db.System = {
         id: undefined,
-        propertyID: propertyId,
         name: '',
         type: '',
       };
       setSystem(defaultSystem);
       setIsDirty(false);
     }
-  }, [isEditing, loadedSystem, propertyId]);
+  }, [isEditing, loadedSystem]);
+
+  if (!id) {
+    return (
+      <Center h={400}>
+        <Text c="dimmed">Select a system to view details</Text>
+      </Center>
+    );
+  }
 
   if ((isEditing && systemLoading) || !system) {
     return (
@@ -145,7 +224,7 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
           <Group gap="md">
             <Button
               variant="subtle"
-              onClick={() => navigate(`/properties/${propertyId}`)}
+              onClick={() => navigate('/systems')}
               size="sm"
             >
               ← Back
@@ -162,7 +241,7 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
             >
               Save
             </Button>
-            {id && (
+            {id && id !== 'new' && (
               <Button
                 color="red"
                 variant="light"
@@ -207,6 +286,34 @@ export function SystemsDetail({ propertyId, id }: SystemsDetailProps) {
               value={system.model || ''}
               onChange={(e) => {
                 setSystem({ ...system, model: e.currentTarget.value });
+                setIsDirty(true);
+              }}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Serial"
+              value={system.serial || ''}
+              onChange={(e) => {
+                setSystem({ ...system, serial: e.currentTarget.value });
+                setIsDirty(true);
+              }}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Age"
+              value={system.age || ''}
+              onChange={(e) => {
+                setSystem({ ...system, age: e.currentTarget.value });
+                setIsDirty(true);
+              }}
+              disabled={isSaving}
+            />
+            <TextInput
+              label="Notes"
+              placeholder="Additional notes about this system"
+              value={system.notes || ''}
+              onChange={(e) => {
+                setSystem({ ...system, notes: e.currentTarget.value });
                 setIsDirty(true);
               }}
               disabled={isSaving}

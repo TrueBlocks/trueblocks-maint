@@ -78,6 +78,22 @@ export function GetTableState(arg1) {
   return window['go']['app']['App']['GetTableState'](arg1);
 }
 
+export function LogDebug(arg1) {
+  return window['go']['app']['App']['LogDebug'](arg1);
+}
+
+export function LogError(arg1) {
+  return window['go']['app']['App']['LogError'](arg1);
+}
+
+export function LogInfo(arg1) {
+  return window['go']['app']['App']['LogInfo'](arg1);
+}
+
+export function LogWarning(arg1) {
+  return window['go']['app']['App']['LogWarning'](arg1);
+}
+
 export function SaveLastRoute(arg1) {
   return window['go']['app']['App']['SaveLastRoute'](arg1);
 }

@@ -1,27 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DataTable } from '../components/DataTable';
-import { useSystems } from '../hooks/useApi';
+import { useNavigation } from '@trueblocks/scaffold';
 import { db } from '../types/models';
 import { Center, Loader, Group, Button } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 
 interface SystemsListProps {
-  propertyId: string;
   onItemClick: (system: db.System) => void;
   onAddClick?: () => void;
+  onFilteredDataChange?: (systems: db.System[]) => void;
+  systems?: db.System[];
 }
 
-export function SystemsList({ propertyId, onItemClick, onAddClick }: SystemsListProps) {
-  const { systems, loading } = useSystems(propertyId) as any;
+export function SystemsList({ onItemClick, onAddClick, onFilteredDataChange, systems: externalSystems }: SystemsListProps) {
+  const { currentId, setCurrentId, setItems } = useNavigation();
   const [data, setData] = useState<db.System[]>([]);
 
   useEffect(() => {
-    if (systems) {
-      setData(systems);
+    if (externalSystems) {
+      setData(externalSystems);
     }
-  }, [systems]);
+  }, [externalSystems]);
 
-  if (loading) {
+  const handleFilteredSortedChange = useCallback(
+    (filteredSystems: db.System[]) => {
+      onFilteredDataChange?.(filteredSystems);
+      const items = filteredSystems.map((s) => ({ id: s.id }));
+      const navCurrentId = currentId ?? filteredSystems[0]?.id ?? '';
+      if (navCurrentId) {
+        setItems('system', items, parseInt(filteredSystems.findIndex((s) => s.id === navCurrentId).toString()) || 0);
+      }
+    },
+    [onFilteredDataChange, currentId, setItems]
+  );
+
+  if (!externalSystems) {
     return (
       <Center h={400}>
         <Loader />
@@ -32,7 +45,7 @@ export function SystemsList({ propertyId, onItemClick, onAddClick }: SystemsList
   const columns = [
     { key: 'name', label: 'System' },
     { key: 'type', label: 'Type' },
-    { key: 'installed', label: 'Installed' },
+    { key: 'model', label: 'Model' },
   ];
 
   return (
@@ -44,11 +57,13 @@ export function SystemsList({ propertyId, onItemClick, onAddClick }: SystemsList
         </Button>
       </Group>
       <DataTable
-        tableName={`systems-${propertyId}`}
+        tableName="systems"
         columns={columns}
         data={data}
         getRowKey={(item) => item.id?.toString() || ''}
-        onRowClick={onItemClick}
+        onRowClick={(item) => onItemClick(item as db.System)}
+        onSelectedChange={(item) => setCurrentId((item as db.System).id as any)}
+        onFilteredSortedChange={handleFilteredSortedChange}
       />
     </div>
   );

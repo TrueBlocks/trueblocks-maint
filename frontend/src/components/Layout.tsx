@@ -3,6 +3,7 @@ import { IconDashboard, IconBox, IconToolsOff, IconUserCheck, IconCalendar, Icon
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { SaveWindowGeometry, SaveLastRoute, GetLastRoute } from '../hooks/useApi';
+import { triggerAppRefresh } from '../hooks/useRefresh';
 import './Layout.css';
 
 interface NavItem {
@@ -15,12 +16,13 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <IconDashboard size={20} />, route: '/', hotkey: 'Cmd+1' },
   { label: 'Properties', icon: <IconBox size={20} />, route: '/properties', hotkey: 'Cmd+2' },
-  { label: 'Maintenance', icon: <IconToolsOff size={20} />, route: '/maintenance', hotkey: 'Cmd+3' },
-  { label: 'Providers', icon: <IconUserCheck size={20} />, route: '/providers', hotkey: 'Cmd+4' },
-  { label: 'Calendar', icon: <IconCalendar size={20} />, route: '/calendar', hotkey: 'Cmd+5' },
+  { label: 'Systems', icon: <IconBox size={20} />, route: '/systems', hotkey: 'Cmd+3' },
+  { label: 'Maintenance', icon: <IconToolsOff size={20} />, route: '/maintenance', hotkey: 'Cmd+4' },
+  { label: 'Providers', icon: <IconUserCheck size={20} />, route: '/providers', hotkey: 'Cmd+5' },
+  { label: 'Calendar', icon: <IconCalendar size={20} />, route: '/calendar', hotkey: 'Cmd+6' },
 ];
 
-const settingsNav: NavItem = { label: 'Settings', icon: <IconSettings size={20} />, route: '/settings', hotkey: 'Cmd+6' };
+const settingsNav: NavItem = { label: 'Settings', icon: <IconSettings size={20} />, route: '/settings', hotkey: 'Cmd+7' };
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -74,7 +76,7 @@ export function Layout({ children }: LayoutProps) {
       // Handle Cmd+R for refresh
       if (isMeta && key === 'r') {
         e.preventDefault();
-        window.location.reload();
+        triggerAppRefresh();
         return;
       }
 
