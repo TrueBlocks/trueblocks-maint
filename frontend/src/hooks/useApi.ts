@@ -224,6 +224,65 @@ export function useMaintenanceEvents(propertyId?: string) {
   return { events, loading, error, save, delete_, refetch: () => propertyId && fetch(propertyId) };
 }
 
+export function useAllMaintenanceEvents() {
+  const [events, setEvents] = useState<db.MaintenanceEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { properties } = useProperties();
+
+  useEffect(() => {
+    const fetchAllEvents = async () => {
+      setLoading(true);
+      try {
+        const allEvents: db.MaintenanceEvent[] = [];
+        for (const prop of (properties || [])) {
+          if (prop.id) {
+            const propEvents = await AppAPI.GetMaintenanceEvents(prop.id);
+            allEvents.push(...(propEvents || []));
+          }
+        }
+        setEvents(allEvents);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (properties && properties.length > 0) {
+      fetchAllEvents();
+    }
+  }, [properties]);
+
+  const save = async (event: db.MaintenanceEvent) => {
+    try {
+      const updated = await AppAPI.SaveMaintenanceEvent(event);
+      setEvents((prev) =>
+        prev.some((e) => e.id === updated.id)
+          ? prev.map((e) => (e.id === updated.id ? updated : e))
+          : [...prev, updated]
+      );
+      return updated;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  const delete_ = async (id: string) => {
+    try {
+      await AppAPI.DeleteMaintenanceEvent(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      throw err;
+    }
+  };
+
+  return { events, loading, error, save, delete_ };
+}
+
 export function useMaintenanceEvent(id?: string) {
   const [event, setEvent] = useState<db.MaintenanceEvent | null>(null);
   const [loading, setLoading] = useState(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DataTable } from '../components/DataTable';
-import { useMaintenanceEvents } from '../hooks/useApi';
+import { useAllMaintenanceEvents } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Center, Loader, Group, Button } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
@@ -11,7 +11,7 @@ interface MaintenanceListProps {
 }
 
 export function MaintenanceList({ onItemClick, onAddClick }: MaintenanceListProps) {
-  const { events, loading } = useMaintenanceEvents() as any;
+  const { events, loading } = useAllMaintenanceEvents();
   const [data, setData] = useState<db.MaintenanceEvent[]>([]);
 
   useEffect(() => {
@@ -30,8 +30,8 @@ export function MaintenanceList({ onItemClick, onAddClick }: MaintenanceListProp
 
   const columns = [
     { key: 'description', label: 'Description' },
-    { key: 'nextDue', label: 'Next Due' },
-    { key: 'estimatedCost', label: 'Estimated Cost' },
+    { key: 'next_due_date', label: 'Next Due' },
+    { key: 'estimated_cost', label: 'Estimated Cost' },
   ];
 
   return (
