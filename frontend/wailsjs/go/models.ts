@@ -72,6 +72,7 @@ export namespace appkit {
 	    filters?: Record<string, Array<string>>;
 	    rangeFilters?: Record<string, RangeFilter>;
 	    selectedIndex?: number;
+	    filterGroupState?: Record<string, any>;
 	
 	    static createFrom(source: any = {}) {
 	        return new TableState(source);
@@ -86,6 +87,7 @@ export namespace appkit {
 	        this.filters = source["filters"];
 	        this.rangeFilters = this.convertValues(source["rangeFilters"], RangeFilter, true);
 	        this.selectedIndex = source["selectedIndex"];
+	        this.filterGroupState = source["filterGroupState"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
