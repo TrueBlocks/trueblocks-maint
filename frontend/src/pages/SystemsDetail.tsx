@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSystem, useAllSystems } from '../hooks/useApi';
-import { useNavigation } from '@trueblocks/scaffold';
-import { useHotkeys } from '@mantine/hooks';
+import { useDetailPageNavigation } from '@trueblocks/scaffold';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
 import { IconCheck, IconTrash } from '@tabler/icons-react';
@@ -16,12 +15,11 @@ interface SystemsDetailProps {
 export function SystemsDetail({ id, filteredSystems = [] }: SystemsDetailProps) {
   const navigate = useNavigate();
   const { save, delete_ } = useAllSystems();
-  const { stack, currentLevel, currentIndex, hasPrev, hasNext, setItems, setCurrentId } = useNavigation();
-  
+
   // Load single system when editing
   const isEditing = id && id !== 'new';
   const { system: loadedSystem, loading: systemLoading } = useSystem(isEditing ? id : undefined);
-  
+
   const [system, setSystem] = useState<db.System | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,75 +27,14 @@ export function SystemsDetail({ id, filteredSystems = [] }: SystemsDetailProps) 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Set up navigation stack from filtered systems
-  const stackLength = stack.length;
-  useEffect(() => {
-    if (stackLength === 0 && filteredSystems.length > 0 && id && id !== 'new') {
-      const currentIdx = filteredSystems.findIndex((s) => s.id === id);
-      const items = filteredSystems.map((_, idx) => ({ id: idx }));
-      if (currentIdx >= 0) {
-        setItems('system', items, currentIdx);
-      }
-    }
-  }, [stackLength, filteredSystems, id, setItems]);
-
-  // Keep current ID in sync
-  useEffect(() => {
-    if (id && id !== 'new') {
-      const currentIdx = filteredSystems.findIndex((s) => s.id === id);
-      if (currentIdx >= 0) {
-        setCurrentId(currentIdx);
-      }
-    }
-  }, [id, filteredSystems, setCurrentId]);
-
-  // Navigation handlers - use index from navigation, map to actual ID from filtered list
-  const navigateToSystem = useCallback(
-    (navIndex: number) => {
-      if (navIndex >= 0 && navIndex < filteredSystems.length) {
-        const systemId = filteredSystems[navIndex].id;
-        if (systemId) {
-          navigate(`/systems/${systemId}`);
-        }
-      }
-    },
-    [navigate, filteredSystems]
-  );
-
-  const handlePrev = useCallback(() => {
-    if (!hasPrev || !currentLevel) return;
-    const prevIndex = currentIndex - 1;
-    navigateToSystem(prevIndex);
-  }, [hasPrev, currentIndex, currentLevel, navigateToSystem]);
-
-  const handleNext = useCallback(() => {
-    if (!hasNext || !currentLevel) return;
-    const nextIndex = currentIndex + 1;
-    navigateToSystem(nextIndex);
-  }, [hasNext, currentIndex, currentLevel, navigateToSystem]);
-
-  const handleHome = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToSystem(0);
-  }, [currentLevel, navigateToSystem]);
-
-  const handleEnd = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToSystem(currentLevel.items.length - 1);
-  }, [currentLevel, navigateToSystem]);
-
-  const handleReturnToList = useCallback(() => {
-    navigate('/systems');
-  }, [navigate]);
-
-  // Set up hotkeys
-  useHotkeys([
-    ['ArrowLeft', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handlePrev(); }, { preventDefault: false }],
-    ['ArrowRight', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleNext(); }, { preventDefault: false }],
-    ['Home', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleHome(); }, { preventDefault: false }],
-    ['End', (e) => { if (!(e.target as HTMLElement).tagName.match(/INPUT|TEXTAREA/)) handleEnd(); }, { preventDefault: false }],
-    ['mod+shift+ArrowLeft', handleReturnToList],
-  ]);
+  useDetailPageNavigation({
+    entityType: 'system',
+    items: filteredSystems,
+    currentId: isEditing ? id : undefined,
+    getId: (s) => s.id ?? '',
+    onNavigate: (nextId) => navigate(`/systems/${nextId}`),
+    onReturnToList: useCallback(() => navigate('/systems'), [navigate]),
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

@@ -18,99 +18,25 @@ function App() {
     <MantineProvider>
       <Notifications />
       <Router>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Layout>
-                <Dashboard />
-              </Layout>
-            }
-          />
-          <Route
-            path="/properties"
-            element={
-              <Layout>
-                <PropertiesPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/properties/:id"
-            element={
-              <Layout>
-                <PropertiesPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/systems"
-            element={
-              <Layout>
-                <SystemsPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/systems/:id"
-            element={
-              <Layout>
-                <SystemsPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/maintenance"
-            element={
-              <Layout>
-                <MaintenancePage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/maintenance/:id"
-            element={
-              <Layout>
-                <MaintenancePage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/providers"
-            element={
-              <Layout>
-                <ProvidersPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/providers/:id"
-            element={
-              <Layout>
-                <ProvidersPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/calendar"
-            element={
-              <Layout>
-                <CalendarPage />
-              </Layout>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <Layout>
-                <Settings />
-              </Layout>
-            }
-          />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/properties" element={<PropertiesPage />} />
+            <Route path="/properties/:id" element={<PropertiesPage />} />
+            <Route path="/systems" element={<SystemsPage />} />
+            <Route path="/systems/:id" element={<SystemsPage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
+            <Route path="/maintenance/:id" element={<MaintenancePage />} />
+            <Route path="/providers" element={<ProvidersPage />} />
+            <Route path="/providers/:id" element={<ProvidersPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Layout>
       </Router>
     </MantineProvider>
   );
 }
 
 export default App;
+

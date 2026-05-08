@@ -100,6 +100,7 @@ func calcNextDueDate(completedDate string, repeatType string, intervalDays int) 
 	switch repeatType {
 	case "once":
 		return "", nil
+	case "monthly":
 		nextDate = t.AddDate(0, 1, 0)
 	case "quarterly":
 		nextDate = t.AddDate(0, 3, 0)
@@ -130,9 +131,7 @@ func (db *DB) CompleteMaintenanceEvent(propertyID, eventID, completedDate, compl
 	if err != nil {
 		return result, fmt.Errorf("calculate next due date: %w", err)
 	}
-	event.LastCompletedDate = &completedDate
 	event.CompletedCount++
-	event.NextDueDate = nextDueDate
 	_, err = db.conn.Exec("UPDATE MaintenanceEvents SET last_completed_date = ?, completed_count = ?, next_due_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", completedDate, event.CompletedCount, nextDueDate, eventID)
 	if err != nil {
 		return result, fmt.Errorf("update event: %w", err)

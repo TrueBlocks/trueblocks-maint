@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHotkeys } from '@mantine/hooks';
-import { useNavigation } from '@trueblocks/scaffold';
+import { useDetailPageNavigation } from '@trueblocks/scaffold';
 import { useServiceProvider, useServiceProviders } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
@@ -15,13 +14,12 @@ interface ProvidersDetailProps {
 
 export function ProvidersDetail({ id, filteredProviders = [] }: ProvidersDetailProps) {
   const navigate = useNavigate();
-  const { stack, currentLevel, currentIndex, hasPrev, hasNext, setItems, setCurrentId } = useNavigation();
   const { save, delete_ } = useServiceProviders();
-  
+
   // Load single provider when editing
   const isEditing = id && id !== 'new';
   const { provider: loadedProvider, loading: providerLoading } = useServiceProvider(isEditing ? id : undefined);
-  
+
   const [provider, setProvider] = useState<db.ServiceProvider | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,79 +27,14 @@ export function ProvidersDetail({ id, filteredProviders = [] }: ProvidersDetailP
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Set up navigation stack from filtered providers
-  const stackLength = stack.length;
-  useEffect(() => {
-    if (stackLength === 0 && filteredProviders.length > 0 && id && id !== 'new') {
-      const currentIndex = filteredProviders.findIndex((p) => p.id === id);
-      const items = filteredProviders.map((_, idx) => ({ id: idx }));
-      if (currentIndex >= 0) {
-        setItems('provider', items, currentIndex);
-      }
-    }
-  }, [stackLength, filteredProviders, id, setItems]);
-
-  // Keep current ID in sync
-  useEffect(() => {
-    if (id && id !== 'new') {
-      const currentIndex = filteredProviders.findIndex((p) => p.id === id);
-      if (currentIndex >= 0) {
-        setCurrentId(currentIndex);
-      }
-    }
-  }, [id, filteredProviders, setCurrentId]);
-
-  // Navigation handlers - use index from navigation, map to actual ID from filtered list
-  const navigateToProvider = useCallback(
-    (navIndex: number) => {
-      if (navIndex >= 0 && navIndex < filteredProviders.length) {
-        const providerId = filteredProviders[navIndex].id;
-        if (providerId) {
-          navigate(`/providers/${providerId}`);
-        }
-      }
-    },
-    [navigate, filteredProviders]
-  );
-
-  const handlePrev = useCallback(() => {
-    if (!hasPrev || !currentLevel) return;
-    const prevIndex = currentIndex - 1;
-    navigateToProvider(prevIndex);
-  }, [hasPrev, currentIndex, currentLevel, navigateToProvider]);
-
-  const handleNext = useCallback(() => {
-    if (!hasNext || !currentLevel) return;
-    const nextIndex = currentIndex + 1;
-    navigateToProvider(nextIndex);
-  }, [hasNext, currentIndex, currentLevel, navigateToProvider]);
-
-  const handleHome = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToProvider(0);
-  }, [currentLevel, navigateToProvider]);
-
-  const handleEnd = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToProvider(currentLevel.items.length - 1);
-  }, [currentLevel, navigateToProvider]);
-
-  const handleReturnToList = useCallback(() => navigate('/providers'), [navigate]);
-
-  // Keyboard shortcuts
-  useHotkeys([
-    ['ArrowRight', (e) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handleNext();
-    }, { preventDefault: false }],
-    ['ArrowLeft', (e) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handlePrev();
-    }, { preventDefault: false }],
-    ['Home', handleHome],
-    ['End', handleEnd],
-    ['mod+shift+ArrowLeft', handleReturnToList],
-  ]);
+  useDetailPageNavigation({
+    entityType: 'provider',
+    items: filteredProviders,
+    currentId: isEditing ? id : undefined,
+    getId: (p) => p.id ?? '',
+    onNavigate: (nextId) => navigate(`/providers/${nextId}`),
+    onReturnToList: useCallback(() => navigate('/providers'), [navigate]),
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

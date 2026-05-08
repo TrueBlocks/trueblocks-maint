@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHotkeys } from '@mantine/hooks';
-import { useNavigation } from '@trueblocks/scaffold';
+import { useDetailPageNavigation } from '@trueblocks/scaffold';
 import { useProperty, useProperties, useSystems } from '../hooks/useApi';
 import { db } from '../types/models';
 import { Card, Stack, TextInput, Group, Button, Loader, Center, Modal, Text, LoadingOverlay } from '@mantine/core';
@@ -16,7 +15,6 @@ interface PropertiesDetailProps {
 
 export function PropertiesDetail({ id, filteredProperties = [] }: PropertiesDetailProps) {
   const navigate = useNavigate();
-  const { stack, currentLevel, currentIndex, hasPrev, hasNext, setItems, setCurrentId } = useNavigation();
   const existingHook = useProperty(id && id !== 'new' ? id : undefined);
   const createHook = useProperties();
   const systemsHook = useSystems(id && id !== 'new' ? id : undefined);
@@ -33,79 +31,14 @@ export function PropertiesDetail({ id, filteredProperties = [] }: PropertiesDeta
   const property = id && id !== 'new' ? existingHook.property : null;
   const loading = id && id !== 'new' ? existingHook.loading : false;
 
-  // Set up navigation stack from filtered properties
-  const stackLength = stack.length;
-  useEffect(() => {
-    if (stackLength === 0 && filteredProperties.length > 0 && id && id !== 'new') {
-      const currentIndex = filteredProperties.findIndex((p) => p.id === id);
-      const items = filteredProperties.map((_, idx) => ({ id: idx }));
-      if (currentIndex >= 0) {
-        setItems('property', items, currentIndex);
-      }
-    }
-  }, [stackLength, filteredProperties, id, setItems]);
-
-  // Keep current ID in sync
-  useEffect(() => {
-    if (id && id !== 'new') {
-      const currentIndex = filteredProperties.findIndex((p) => p.id === id);
-      if (currentIndex >= 0) {
-        setCurrentId(currentIndex);
-      }
-    }
-  }, [id, filteredProperties, setCurrentId]);
-
-  // Navigation handlers - use index from navigation, map to actual ID from filtered list
-  const navigateToProperty = useCallback(
-    (navIndex: number) => {
-      if (navIndex >= 0 && navIndex < filteredProperties.length) {
-        const propId = filteredProperties[navIndex].id;
-        if (propId) {
-          navigate(`/properties/${propId}`);
-        }
-      }
-    },
-    [navigate, filteredProperties]
-  );
-
-  const handlePrev = useCallback(() => {
-    if (!hasPrev || !currentLevel) return;
-    const prevIndex = currentIndex - 1;
-    navigateToProperty(prevIndex);
-  }, [hasPrev, currentIndex, currentLevel, navigateToProperty]);
-
-  const handleNext = useCallback(() => {
-    if (!hasNext || !currentLevel) return;
-    const nextIndex = currentIndex + 1;
-    navigateToProperty(nextIndex);
-  }, [hasNext, currentIndex, currentLevel, navigateToProperty]);
-
-  const handleHome = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToProperty(0);
-  }, [currentLevel, navigateToProperty]);
-
-  const handleEnd = useCallback(() => {
-    if (!currentLevel || currentLevel.items.length === 0) return;
-    navigateToProperty(currentLevel.items.length - 1);
-  }, [currentLevel, navigateToProperty]);
-
-  const handleReturnToList = useCallback(() => navigate('/properties'), [navigate]);
-
-  // Keyboard shortcuts
-  useHotkeys([
-    ['ArrowRight', (e) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handleNext();
-    }, { preventDefault: false }],
-    ['ArrowLeft', (e) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') handlePrev();
-    }, { preventDefault: false }],
-    ['Home', handleHome],
-    ['End', handleEnd],
-    ['mod+shift+ArrowLeft', handleReturnToList],
-  ]);
+  useDetailPageNavigation({
+    entityType: 'property',
+    items: filteredProperties,
+    currentId: !isCreating && id ? id : undefined,
+    getId: (p) => p.id ?? '',
+    onNavigate: (nextId) => navigate(`/properties/${nextId}`),
+    onReturnToList: useCallback(() => navigate('/properties'), [navigate]),
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

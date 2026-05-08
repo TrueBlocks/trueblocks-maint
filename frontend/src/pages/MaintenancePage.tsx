@@ -48,7 +48,7 @@ export function MaintenancePage() {
   };
 
   useEffect(() => {
-    SetTab('maintenance', activeTab);
+    SetTab('maintenance', activeTab ?? '');
   }, [activeTab]);
 
   return (

@@ -49,7 +49,7 @@ export function PropertiesPage() {
   };
 
   useEffect(() => {
-    SetTab('properties', activeTab);
+    SetTab('properties', activeTab ?? '');
   }, [activeTab]);
 
   return (

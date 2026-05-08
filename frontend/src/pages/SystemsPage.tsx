@@ -59,7 +59,7 @@ export function SystemsPage() {
 
   useEffect(() => {
     logger.info('SystemsPage: Tab state saved', { activeTab });
-    SetTab('systems', activeTab);
+    SetTab('systems', activeTab ?? '');
   }, [activeTab]);
 
   return (

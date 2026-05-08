@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	appkit "github.com/TrueBlocks/trueblocks-art/packages/appkit/v2"
 	"github.com/TrueBlocks/trueblocks-maint/v2/internal/db"
 	"github.com/TrueBlocks/trueblocks-maint/v2/internal/state"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
@@ -27,30 +27,30 @@ func (a *App) Startup(ctx context.Context) {
 	dbPath := filepath.Join(dataDir, "maint.db")
 	database, err := db.New(dbPath)
 	if err != nil {
-		fmt.Printf("Failed to open database: %v\n", err)
+		runtime.LogErrorf(ctx, "Failed to open database: %v", err)
 		return
 	}
 	a.db = database
 	initialized, err := database.IsInitialized()
 	if err != nil {
-		fmt.Printf("Failed to check database: %v\n", err)
+		runtime.LogErrorf(ctx, "Failed to check database: %v", err)
 		return
 	}
 	if !initialized {
-		fmt.Printf("Database not initialized, initializing schema...\n")
-		schemaPath := filepath.Join(dataDir, "schema.sql")
-		if err := database.InitSchemaFromFile(schemaPath); err != nil {
-			fmt.Printf("Failed to init from file, trying embedded schema: %v\n", err)
-			if embErr := database.InitSchemaFromEmbedded(); embErr != nil {
-				fmt.Printf("Failed to init embedded schema: %v\n", embErr)
+		runtime.LogInfo(ctx, "Database not initialized, initializing schema...")
+		if err := database.InitSchemaFromEmbedded(); err != nil {
+			runtime.LogErrorf(ctx, "Failed to init embedded schema: %v", err)
+			schemaPath := filepath.Join(dataDir, "schema.sql")
+			if fErr := database.InitSchemaFromFile(schemaPath); fErr != nil {
+				runtime.LogErrorf(ctx, "Failed to init schema from file fallback: %v", fErr)
 			} else {
-				fmt.Printf("Successfully initialized schema from embedded\n")
+				runtime.LogInfo(ctx, "Successfully initialized schema from file fallback")
 			}
 		} else {
-			fmt.Printf("Successfully initialized schema from file\n")
+			runtime.LogInfo(ctx, "Successfully initialized schema from embedded")
 		}
 	} else {
-		fmt.Printf("Database already initialized\n")
+		runtime.LogInfo(ctx, "Database already initialized")
 	}
 }
 
@@ -60,19 +60,20 @@ func (a *App) Shutdown(_ context.Context) {
 	}
 }
 
-// Logging methods - output to terminal where app is running
+// Logging methods bound to the frontend so the React app can write into the
+// Wails runtime log stream.
 func (a *App) LogDebug(message string) {
-	fmt.Printf("[DEBUG] %s\n", message)
+	runtime.LogDebug(a.ctx, message)
 }
 
 func (a *App) LogInfo(message string) {
-	fmt.Printf("[INFO] %s\n", message)
+	runtime.LogInfo(a.ctx, message)
 }
 
 func (a *App) LogWarning(message string) {
-	fmt.Printf("[WARN] %s\n", message)
+	runtime.LogWarning(a.ctx, message)
 }
 
 func (a *App) LogError(message string) {
-	fmt.Printf("[ERROR] %s\n", message)
+	runtime.LogError(a.ctx, message)
 }

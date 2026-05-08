@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	appkit "github.com/TrueBlocks/trueblocks-art/packages/appkit/v2"
 	_ "modernc.org/sqlite"
 )
 
@@ -20,7 +21,7 @@ type DB struct {
 
 func New(dbPath string) (*DB, error) {
 	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, appkit.DirPermissions); err != nil {
 		return nil, fmt.Errorf("create db dir: %w", err)
 	}
 	conn, err := sql.Open("sqlite", dbPath)

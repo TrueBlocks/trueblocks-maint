@@ -48,7 +48,7 @@ export function ProvidersPage() {
   };
 
   useEffect(() => {
-    SetTab('providers', activeTab);
+    SetTab('providers', activeTab ?? '');
   }, [activeTab]);
 
   return (
